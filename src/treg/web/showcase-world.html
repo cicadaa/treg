@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The GTM world: which landscape are you? | treg.to</title>
+<meta name="description" content="Five styles of go-to-market, each on its own landscape: the Fullstack, the Mastermind, the Inventor, the Wordsmith and the Dealmaker, and the people who lead each.">
+<link rel="canonical" href="{BASE}/gtm-leaderboard"/>
+<meta property="og:title" content="The GTM world | treg.to"/>
+<meta property="og:url" content="{BASE}/gtm-leaderboard"/>
+<meta property="og:type" content="website"/>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #E4E3E0; --paper-2: #D6D5D1; --ink: #0E0E0E; --muted: #5E5D5A; --line: rgba(14,14,14,.18);
+    --green: #118453; --blend: multiply; --art-op: 1; --grain-op: .55;
+    --display: "Inter Tight", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --text: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --ease: cubic-bezier(.2,.8,.2,1);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; color: var(--ink); font: 16px/1.55 var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    background: var(--paper);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 20% 30%, var(--paper-2), transparent 70%),
+      radial-gradient(ellipse 50% 50% at 85% 75%, var(--paper-2), transparent 70%);
+  }
+  /* paper grain over everything, never in the way of a click */
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 100; opacity: var(--grain-op); mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+
+  .nav { position: fixed; inset: 0 0 auto; z-index: 50; display: flex; justify-content: space-between; align-items: center; padding: 16px 28px; }
+  .wordmark { display: flex; align-items: center; gap: 10px; font: 600 15px var(--display); }
+  .wordmark a { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+  .wordmark a.here { font-weight: 500; }
+  .wordmark .sep { color: var(--muted); font-weight: 400; }
+  .wordmark svg { width: 22px; height: 22px; border-radius: 6px; }
+  .nav .right { display: flex; gap: 22px; align-items: center; }
+  .nav .right a, .nav .right button { font: 500 14px var(--text); color: var(--muted); text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; }
+  .nav .right a:hover, .nav .right button:hover { color: var(--ink); }
+  @media (max-width: 640px) { .nav { padding: 14px 16px; } .nav .hide-sm { display: none; } .nav .right { gap: 14px; } }
+
+
+  /* ---------- hero poster ---------- */
+  .hero { position: relative; min-height: 100svh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; padding: 72px 24px 24px; }
+  /* the headline is for screen readers and search only; the landscapes open the page */
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* the ring: five landscapes on a circle seen from its edge; the front one is closest and largest */
+  .ring { position: relative; width: 100%; max-width: 1320px; height: clamp(340px, min(54vw, calc(100svh - 140px)), 720px); }
+  .peak { position: absolute; left: var(--x); top: var(--y); width: var(--w); z-index: var(--z); padding: 0; border: 0; background: none; cursor: pointer;
+    transform: translate(-50%, -100%) scale(var(--zoom, 1)); transform-origin: 50% 100%; opacity: var(--o);
+    transition: left .9s var(--ease), top .9s var(--ease), width .9s var(--ease), opacity .9s, transform .45s var(--ease), filter .6s; filter: saturate(var(--sat)); }
+  .peak:hover, .peak:focus-visible { --zoom: 1.16; z-index: 20; filter: saturate(1.15); opacity: 1; }
+  svg.art { display: block; width: 100%; height: auto; mix-blend-mode: var(--blend); opacity: var(--art-op); }
+  .peak .label { display: block; margin-top: -4px; text-align: center; font: 800 clamp(11px, 1.4vw, 18px)/1 var(--display); letter-spacing: -.02em; }
+  .peak .label small { display: block; margin-top: 4px; font: 500 10px var(--mono); letter-spacing: .04em; color: var(--muted); text-transform: none; white-space: nowrap; }
+  /* the crown: whoever leads a landscape floats over its summit */
+  .crown { position: absolute; left: 50%; bottom: calc(74% + 14px); display: flex; flex-direction: column; align-items: center; gap: 4px; transform: translateX(-50%); animation: float 4.5s ease-in-out infinite; animation-delay: var(--d); pointer-events: none; width: 100%; z-index: 1; }
+  /* ten seats in two rows, the leader first; sizes follow the painting, so back peaks seat smaller faces.
+     The crown sits above the painting, a layer of its own, so the faces take the hover */
+  .crown .faces { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; width: 46%; }
+  .crown .face { width: 100%; aspect-ratio: 1; min-width: 0; border-radius: 50%; border: 1.5px solid var(--paper); object-fit: cover; display: grid; place-items: center; font: 700 clamp(6px, .8vw, 10px) var(--display); background: var(--ink); color: var(--paper); box-shadow: 0 6px 14px -8px rgba(0,0,0,.5); transition: transform .2s var(--ease); }
+  .crown .f:first-child .face { border-color: var(--ink); }
+  .crown .face.seat { background: color-mix(in srgb, var(--paper) 80%, transparent); border: 1.5px dashed var(--ink); opacity: .55; color: var(--muted); box-shadow: none; }
+  /* a name shows only while its face is hovered */
+  .crown .f { position: relative; display: block; min-width: 0; pointer-events: auto; }
+  .crown .f::after { content: attr(data-name); position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); padding: 3px 9px; border-radius: 999px; background: var(--ink); color: var(--paper); font: 700 12px/1.2 var(--display); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 5; }
+  .crown .f:hover::after { opacity: 1; }
+  /* the hovered face grows over its neighbours */
+  .crown .f:hover { z-index: 6; }
+  .crown .f:hover .face { transform: scale(1.4); }
+  @keyframes float { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -8px); } }
+  .ring-hint { max-width: 100%; text-align: center; font: 500 11px var(--mono); letter-spacing: .06em; color: var(--muted); }
+  @media (max-width: 640px) { .ring-hint { font-size: 10px; } }
+
+  /* ---------- the vote: one name card per person ---------- */
+  .vote { max-width: 1240px; margin: 0 auto; padding: 90px 32px 40px; }
+  .vote h2 { margin: 0; font: 800 clamp(36px, 6vw, 80px)/.9 var(--display); letter-spacing: -.045em; }
+  .vote .sub { margin: 10px 0 0; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 26px 0 22px; }
+  .chips button { border: 1.5px solid var(--ink); background: none; border-radius: 999px; padding: 11px 22px; font: 700 16px var(--display); letter-spacing: -.005em; cursor: pointer; transition: transform .15s var(--ease), background .15s, color .15s; }
+  .chips button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  /* every button and every board row answers the pointer the same way: it lifts, the pill fills */
+  .chips button:hover, .up:hover:not(:disabled), .follow:hover { transform: translateY(-2px); }
+  .chips button:hover, .up:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+  .follow:hover { background: none; color: var(--ink); }
+  a.follow { display: inline-block; text-decoration: none; }
+  .acts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .follow.ghost { background: none; color: var(--ink); }
+  .follow.ghost:hover { background: var(--ink); color: var(--paper); }
+  .follow:disabled { opacity: .6; cursor: progress; transform: none; }
+  .join { padding-bottom: 120px; }
+  .board li:not(.empty) { transition: background .15s, transform .15s var(--ease); }
+  .board li:not(.empty):hover { background: color-mix(in srgb, var(--ink) 6%, transparent); transform: translateX(4px); }
+  .board { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--ink); }
+  .board li { display: grid; grid-template-columns: 44px 44px minmax(0, 1fr) 130px 86px 160px 74px; gap: 14px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+  .board.one li { grid-template-columns: 44px 44px minmax(0, 1fr) 86px 160px 74px; }
+  .board.one .style { display: none; }
+  .board .rk { font: 500 13px var(--mono); color: var(--muted); }
+  .board li:nth-child(-n+3) .rk { color: var(--ink); font-weight: 700; }
+  .board .pic { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; filter: grayscale(1) contrast(1.1); display: grid; place-items: center; font: 700 14px var(--display); background: var(--ink); color: var(--paper); }
+  .board b { display: block; font: 700 16px/1.2 var(--display); letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board small { display: block; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .board .who b { min-width: 0; }
+  .co { display: inline-flex; flex: none; align-items: center; gap: 5px; padding: 2px 8px 2px 4px; border: 1px solid var(--line); border-radius: 999px; font: 600 11.5px var(--display); color: var(--ink); white-space: nowrap; }
+  .co img { width: 14px; height: 14px; border-radius: 3px; }
+  .board .style, .board .fol { font: 500 12px var(--mono); }
+  .board .fol { text-align: right; }
+  .board .x { font: 500 12px var(--mono); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+  .board .x:hover { text-decoration: underline; }
+  /* hovering a handle offers to copy it or follow them on X */
+  .xh { position: relative; min-width: 0; }
+  .xh .xa { position: absolute; left: 0; top: calc(100% + 4px); z-index: 6; display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: var(--paper); border: 1.5px solid var(--ink); box-shadow: 0 10px 24px -14px rgba(0,0,0,.5); opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity .15s, transform .15s var(--ease), visibility .15s; }
+  .xh:hover .xa, .xh:focus-within .xa { opacity: 1; visibility: visible; transform: none; }
+  .xa button, .xa a { padding: 5px 12px; border-radius: 999px; border: 1.5px solid var(--ink); background: none; color: var(--ink); font: 700 12px var(--display); text-decoration: none; cursor: pointer; white-space: nowrap; }
+  .xa a { background: var(--ink); color: var(--paper); }
+  .xa button:hover { background: var(--ink); color: var(--paper); }
+  .board .up { justify-self: end; }
+  .board .empty { display: block; padding: 16px 0; color: var(--muted); }
+  @media (max-width: 860px) {
+    .board li, .board.one li { grid-template-columns: 30px 40px minmax(0, 1fr) auto; gap: 10px; }
+    .board .style, .board .fol, .board .x { display: none; }
+  }
+  .up { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--ink); background: none; cursor: pointer; font: 700 13px var(--display); transition: transform .15s var(--ease), background .15s, color .15s; }
+  .up[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .up .c { font: 500 12px var(--mono); }
+  .up:disabled { opacity: .5; cursor: default; }
+
+  /* ---------- the sign-in box, as on /showcase ---------- */
+
+  /* ---------- the chosen style, shown above its board ---------- */
+  .panel { display: grid; grid-template-columns: 1fr 1.1fr; gap: 40px; align-items: center; margin: 0 0 28px; }
+  .num { font: 500 11px var(--mono); letter-spacing: .08em; color: var(--muted); }
+  .copy h3 { margin: 10px 0 0; font: 800 clamp(44px, 6.5vw, 92px)/.86 var(--display); letter-spacing: -.05em; }
+  .copy .tilt { display: inline-block; margin-top: 18px; font: 800 clamp(20px, 2.4vw, 28px)/1 var(--display); letter-spacing: -.03em; transform: rotate(5deg); transform-origin: left; }
+  .copy .kicker { display: block; margin-top: 30px; font: 600 12px var(--mono); letter-spacing: .04em; color: var(--muted); }
+  .copy .line { max-width: 40ch; margin: 6px 0 0; font-size: 17px; }
+  .follow { margin-top: 22px; padding: 10px 18px; border-radius: 999px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper); font: 700 14px var(--display); cursor: pointer; transition: transform .15s var(--ease), background .15s, color .15s; }
+  @media (max-width: 860px) { .panel { grid-template-columns: 1fr; gap: 10px; } }
+
+  footer { padding: 40px 28px 50px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font: 500 11px var(--mono); letter-spacing: .06em; color: var(--muted); }
+  footer a { text-decoration: none; }
+
+  /* the card a photo opens: one person, room to breathe */
+  .crown .f[data-id], .board .pic { cursor: pointer; }
+  .card { width: min(560px, calc(100vw - 32px)); max-height: calc(100svh - 32px); padding: 0; border: 1.5px solid var(--ink); border-radius: 28px; background: var(--paper); color: var(--ink); box-shadow: 0 40px 80px -40px rgba(0,0,0,.45); }
+  .card::backdrop { background: rgba(14,14,14,.35); backdrop-filter: blur(3px); }
+  .card[open] { animation: rise .35s var(--ease); }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px) scale(.98); } }
+  .card .in { position: relative; display: flex; flex-direction: column; gap: 28px; padding: 48px 44px 40px; }
+  .card .cls { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--ink); background: none; font: 600 14px var(--display); cursor: pointer; }
+  .card .cls:hover { background: var(--ink); color: var(--paper); }
+  .card .head { display: flex; align-items: center; gap: 20px; padding-right: 40px; }
+  .card .big { flex: none; width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 2px solid var(--ink); display: grid; place-items: center; font: 800 28px var(--display); background: var(--ink); color: var(--paper); }
+  .card h3 { margin: 0; font: 800 clamp(28px, 4vw, 38px)/1 var(--display); letter-spacing: -.035em; }
+  .card .handle { display: inline-block; margin-top: 8px; font: 500 13px var(--mono); color: var(--muted); text-decoration: none; }
+  .card .handle:hover { color: var(--ink); text-decoration: underline; }
+  .card .head .co { margin-top: 10px; }
+  .card .bio { margin: 0; font-size: 17px; line-height: 1.6; overflow-wrap: anywhere; }
+  .card .bio a { color: inherit; }
+  .card .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 0; padding: 24px 0 0; border-top: 1px solid var(--line); }
+  .card dt { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .card dd { margin: 6px 0 0; font: 700 22px/1.15 var(--display); letter-spacing: -.02em; }
+  .card dd small { display: block; margin-top: 6px; font: 400 14px/1.5 var(--text); letter-spacing: 0; color: var(--muted); }
+  .card .style { display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: center; grid-column: 1 / -1; }
+  .card .acts .follow { margin-top: 0; text-decoration: none; }
+  @media (max-width: 640px) { .card .in { padding: 40px 22px 28px; gap: 22px; } .card .big { width: 72px; height: 72px; } .card .style { grid-template-columns: 84px 1fr; } }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .9s var(--ease), transform 1.1s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<!-- the watercolor: wobbly edges, pigment that pools and skips, as if painted on the paper -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="wc" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="3" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="16" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="9" result="tooth"/>
+      <feColorMatrix in="tooth" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -.9 1.25" result="skip"/>
+      <feComposite in="wobble" in2="skip" operator="in" result="pigment"/>
+      <feGaussianBlur in="pigment" stdDeviation=".5"/>
+    </filter>
+    <filter id="wash" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="2" seed="2" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="30" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feGaussianBlur in="d" stdDeviation="6"/>
+    </filter>
+  </defs>
+</svg>
+
+<nav class="nav">
+  <span class="wordmark"><a href="/" aria-label="treg home"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#101010"/><rect x="111" y="111" width="140.5" height="140.5" rx="20" fill="#fff"/><rect x="260.5" y="260.5" width="140.5" height="140.5" rx="20" fill="#fff"/></svg> treg</a> <span class="sep">/</span> <a href="/gtm-leaderboard" class="here">GTM leaderboard</a></span>
+  <div class="right">
+    <a class="hide-sm" href="/showcase#leaderboard">Leaderboard</a>
+    <a href="#join">Get on the leaderboard</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <h1 class="sr">The GTM world: which landscape are you?</h1>
+  <nav class="ring" id="ring" aria-label="The five landscapes"></nav>
+  <span class="ring-hint">Hover to look closer · click one to bring it to the front</span>
+</header>
+
+<section class="vote" id="vote">
+  <h2 class="reveal">Who stands on top</h2>
+  <p class="sub">Upvote the people you'd follow. The most upvoted of each style floats over its summit.</p>
+  <div class="chips" id="chips" role="group" aria-label="Filter by landscape"></div>
+  <div id="panel" aria-live="polite"></div>
+  <ol class="board" id="cards"></ol>
+</section>
+
+<dialog class="card" id="card" aria-label="Profile"></dialog>
+
+<section class="vote join" id="join">
+  <h2 class="reveal">Get on the leaderboard</h2>
+  <p class="sub">Run go-to-market and want a seat on a summit? Post your X handle and your style to @treg_ai; people are added by hand.</p>
+  <a class="follow" href="https://x.com/intent/post?text=%40treg_ai%20put%20me%20on%20the%20GTM%20leaderboard.%20My%20style%20is%20" target="_blank" rel="noopener">Ask on X</a>
+</section>
+
+
+<footer>
+  <span>treg · one base URL, one token, the whole catalog</span>
+  <a href="/showcase">Built with treg ↗</a>
+</footer>
+
+<script>
+/* ---------------- the board: one hand-kept table, media/showcase/world.md ---------------- */
+// Each row names its landscape; row order is rank, so the first row of a landscape stands on top.
+// Each style is named for the kind of operator it is; its landscape is the picture it lives in.
+const MOUNTAINS = [
+  { key: "volcano", name: "Fullstack", land: "the volcano", tilt: "Runs the whole motion, all month",
+    line: "The whole outbound motion at full volume: lists, sequences and follow-ups firing every day, the most calls on treg, and they never cool down.",
+    rule: "10k+ calls in four weeks" },
+  { key: "iceberg", name: "Mastermind", land: "the iceberg", tilt: "Still water, deep work",
+    line: "Calm and analytical. Few calls, never a missed day, and most of the work sits under the waterline: data, ops, deliverability.",
+    rule: "30+ days in a row" },
+  { key: "forest", name: "Inventor", land: "the forest", tilt: "Builds what was not there",
+    line: "Builders. They invent new systems out of many tools, enrichment tables and waterfalls, and let the system grow on its own.",
+    rule: "eight or more providers" },
+  { key: "creek", name: "Wordsmith", land: "the creek", tilt: "Words that keep flowing",
+    line: "Writers and listeners. Posts, ghostwriting and social signals in a steady flow that never runs dry.",
+    rule: "mostly social and content tools" },
+  { key: "flower", name: "Dealmaker", land: "the flower hill", tilt: "Wins the room",
+    line: "Relationship sellers. Founder-led deals, partners and warm intros; the room warms up when they arrive.",
+    rule: "mostly people and company lookups" },
+];
+for (const m of MOUNTAINS) m.people = [];
+const byKey = Object.fromEntries(MOUNTAINS.map(m => [m.key, m]));
+// the first markdown table in the file, as one object per row keyed by its header
+function readTable(md) {
+  const rows = md.split("\n").filter(l => l.trim().startsWith("|"))
+    .map(l => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim()));
+  const head = (rows[0] || []).map(h => h.toLowerCase());
+  return rows.slice(1).filter(r => !r.every(c => /^:?-+:?$/.test(c)))
+    .map(r => Object.fromEntries(head.map((h, i) => [h, r[i] || ""])));
+}
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const initials = n => String(n).split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+/* ---------------- the paintings: each landscape in watercolor ---------------- */
+let seed = 7;
+const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+const W = inner => `<svg class="art" viewBox="0 0 600 500" aria-hidden="true">${inner}</svg>`;
+const paint = (body, f = "wc") => `<g filter="url(#${f})">${body}</g>`;
+const ART = {
+  volcano: () => W(
+    paint(`<ellipse cx="300" cy="470" rx="290" ry="26" fill="#C6B3A2" opacity=".55"/>`, "wash") +
+    paint(`<g fill="#9A928D" opacity=".42"><ellipse cx="300" cy="96" rx="70" ry="40"/><ellipse cx="350" cy="58" rx="80" ry="38"/><ellipse cx="410" cy="30" rx="70" ry="28"/><ellipse cx="260" cy="64" rx="44" ry="26"/></g>`, "wash") +
+    paint(`<path d="M60 470 L248 160 Q300 132 352 160 L540 470Z" fill="#B97767" opacity=".85"/>
+      <path d="M300 146 L352 160 L540 470 L322 470Z" fill="#7A463E" opacity=".5"/>
+      <path d="M248 160 L200 240 L238 232 L214 300 L262 270Z" fill="#E1A28F" opacity=".45"/>
+      <ellipse cx="300" cy="152" rx="54" ry="12" fill="#E8603A"/>
+      <path d="M292 160 Q270 240 300 300 T 278 430" stroke="#D94A1E" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <path d="M318 160 Q350 230 336 300 T 372 420" stroke="#EE7A2E" stroke-width="7" fill="none" stroke-linecap="round" opacity=".85"/>`)),
+  iceberg: () => W(
+    // a tabular berg off the Antarctic shelf: flat snow top, banded walls, most of it below the water
+    paint(`<rect x="10" y="300" width="580" height="190" fill="#4E7F96" opacity=".42"/>`, "wash") +
+    paint(`<path d="M96 302 L506 302 L556 404 L442 482 L160 476 L58 398Z" fill="#7FBCD2" opacity=".5"/>`) +
+    paint(`<path d="M132 302 L142 168 L238 156 L340 166 L462 154 L478 302Z" fill="#BFD9E5"/>
+      <path d="M340 166 L462 154 L478 302 L352 302Z" fill="#9CC3D6" opacity=".7"/>
+      <path d="M142 168 L238 156 L340 166 L462 154 L462 176 L340 186 L238 176 L142 188Z" fill="#E3EEF3"/>
+      <g stroke="#9EC6D8" stroke-width="3" opacity=".7" fill="none"><path d="M146 206 Q300 196 470 204"/><path d="M146 236 Q300 226 472 236"/><path d="M144 266 Q300 258 474 266"/></g>
+      <g stroke="#3E8DB8" stroke-width="5" opacity=".75" stroke-linecap="round"><path d="M222 174 L216 296"/><path d="M336 182 L344 298"/><path d="M402 176 L396 260"/></g>
+      <path d="M134 294 L478 294" stroke="#4FB0D4" stroke-width="7" opacity=".7"/>
+      <ellipse cx="76" cy="316" rx="34" ry="7" fill="#CFE3EC"/><ellipse cx="534" cy="328" rx="26" ry="6" fill="#CFE3EC"/><ellipse cx="560" cy="312" rx="12" ry="3" fill="#CFE3EC"/>`) +
+    `<path d="M132 302 L142 168 L238 156 L340 166 L462 154 L478 302" fill="none" stroke="#1B2A33" stroke-width="1.6" stroke-linejoin="round" opacity=".7"/>
+     <path d="M40 302 L560 302" stroke="#1B2A33" stroke-width="1.2" opacity=".5"/>`),
+  forest: () => {
+    let pines = "";
+    for (let i = 0; i < 42; i++) {
+      const x = 70 + rnd() * 460, base = 470 - Math.max(0, 170 - Math.abs(x - 300) * .62) * (.6 + rnd() * .5), h = 70 + rnd() * 80;
+      const c = ["#3E6B46", "#557F4C", "#2E5638", "#6C8F57"][i % 4];
+      pines += `<path d="M${x} ${base - h} L${x + h * .28} ${base} L${x - h * .28} ${base}Z" fill="${c}" opacity=".78"/><path d="M${x} ${base} v12" stroke="#5A4030" stroke-width="4"/>`;
+    }
+    return W(paint(`<path d="M30 480 Q300 220 570 480Z" fill="#9DB585" opacity=".6"/>`, "wash") + paint(pines));
+  },
+  creek: () => W(
+    paint(`<ellipse cx="300" cy="470" rx="270" ry="24" fill="#B8BFC6" opacity=".55"/>`, "wash") +
+    paint(`<path d="M60 470 L226 186 L300 110 L372 176 L540 470Z" fill="#8F8AA3" opacity=".78"/>
+      <path d="M300 110 L372 176 L540 470 L330 470Z" fill="#5F5A74" opacity=".45"/>
+      <path d="M300 110 L272 156 L292 150 L306 170 L326 150 L346 162Z" fill="#E6E9F0"/>
+      <path d="M306 170 Q290 230 312 280 Q330 330 298 390 Q284 430 304 462" stroke="#6CB5DD" stroke-width="15" fill="none" stroke-linecap="round"/>
+      <path d="M306 170 Q290 230 312 280 Q330 330 298 390 Q284 430 304 462" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-dasharray="14 18" opacity=".8"/>
+      <ellipse cx="306" cy="466" rx="60" ry="11" fill="#6CB5DD" opacity=".8"/>`)),
+  flower: () => {
+    let blooms = "";
+    const bloom = (x, y, r, c, rot) => {
+      let p = "";
+      for (let k = 0; k < 5; k++) p += `<ellipse cx="${x}" cy="${y - r * .55}" rx="${r * .42}" ry="${r * .6}" fill="${c}" opacity=".72" transform="rotate(${rot + k * 72} ${x} ${y})"/>`;
+      return p + `<circle cx="${x}" cy="${y}" r="${r * .2}" fill="#5A2C3A"/>`;
+    };
+    for (let i = 0; i < 26; i++) {
+      const x = 60 + rnd() * 480, top = 470 - Math.max(0, 160 - Math.abs(x - 300) * .55), y = top + rnd() * (470 - top) * .8 + 8, r = 10 + rnd() * 12;
+      blooms += `<path d="M${x} ${y} q ${(rnd() - .5) * 20} 30 0 ${Math.max(8, 470 - y)}" stroke="#6E9A55" stroke-width="2.5" fill="none"/>` + bloom(x, y, r, ["#E58FA6", "#E6745C", "#F0B8C4", "#C9637A", "#F2C46B"][i % 5], rnd() * 72);
+    }
+    blooms += `<path d="M170 300 q 30 90 10 180" stroke="#5E8C4A" stroke-width="5" fill="none"/>` + bloom(170, 300, 56, "#E37C93", 10);
+    blooms += `<path d="M440 330 q -24 80 -6 150" stroke="#5E8C4A" stroke-width="4" fill="none"/>` + bloom(440, 330, 40, "#E2694F", 30);
+    return W(paint(`<path d="M20 490 Q300 300 580 490Z" fill="#B9C69B" opacity=".62"/>`, "wash") + paint(blooms));
+  },
+};
+
+/* ---------------- the page ---------------- */
+const two = n => String(n).padStart(2, "0");
+const fallback = `this.replaceWith(Object.assign(document.createElement('span'), { className: this.className, textContent: this.dataset.i }))`;
+const pic = (p, cls) => {
+  const src = p.photo ? `/media/showcase/${esc(p.photo)}` : p.x ? `https://unavatar.io/x/${encodeURIComponent(p.x)}` : "";
+  return src ? `<img class="${cls}" src="${src}" alt="" loading="lazy" referrerpolicy="no-referrer" data-i="${esc(initials(p.name))}" onerror="${fallback}">`
+    : `<span class="${cls}">${esc(initials(p.name))}</span>`;
+};
+const k = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M" : n >= 1e3 ? (n / 1e3).toFixed(1).replace(/\.0$/, "") + "k" : String(n);
+
+/* votes: counts for everyone, and which ones this visitor gave */
+const votes = { counts: {}, mine: new Set() };
+const score = p => votes.counts[p.id] || 0;
+// within a landscape the most upvoted lead; ties keep the table's order
+function rank() {
+  for (const m of MOUNTAINS) m.people = m.all.map((p, i) => [p, i]).sort((a, b) => score(b[0]) - score(a[0]) || a[1] - b[1]).map(x => x[0]);
+}
+for (const m of MOUNTAINS) m.all = [];
+
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}), { threshold: .15 }) : null;
+function observe() { document.querySelectorAll(".reveal:not(.in)").forEach(el => io ? io.observe(el) : el.classList.add("in")); }
+
+/* the ring: five slots on a circle; slot 0 is the front, closest and largest */
+let front = 0;
+const ring = document.getElementById("ring");
+ring.innerHTML = MOUNTAINS.map((m, i) => `<button class="peak" type="button" data-k="${m.key}" style="--d:-${i * .9}s" aria-label="${m.name}">
+    <span class="crown" data-crown="${m.key}"></span>${ART[m.key]()}<span class="label">${m.name}<small data-count="${m.key}"></small></span></button>`).join("");
+function layout() {
+  MOUNTAINS.forEach((m, i) => {
+    const slot = ((i - front) % 5 + 7) % 5 - 2, a = slot * 2 * Math.PI / 5, depth = (Math.cos(a) + 1) / 2;
+    const el = ring.querySelector(`[data-k="${m.key}"]`).style;
+    // on a narrow screen the ring pulls in so the side paintings stay on the page
+    el.setProperty("--x", `${50 + (innerWidth < 640 ? 31 : 39) * Math.sin(a)}%`);
+    el.setProperty("--y", `${50 + 42 * depth}%`);
+    // the ring is wider than tall, so a painting's width is capped by the ring's height too
+    el.setProperty("--w", `min(${11 + 33 * depth}%, ${(22 + 62 * depth).toFixed(1)}vh)`);
+    el.setProperty("--z", String(Math.round(depth * 10)));
+    el.setProperty("--o", String(.6 + .4 * depth));
+    el.setProperty("--sat", String(.55 + .45 * depth));
+  });
+}
+// every summit seats SEATS people, the leader first, and an open seat for each place nobody has
+// taken yet
+const SEATS = 10;
+function drawCrowns() {
+  for (const m of MOUNTAINS) {
+    const [lead, ...rest] = m.people.slice(0, SEATS);
+    const open = SEATS - (lead ? 1 : 0) - rest.length;
+    const faces = (lead ? [lead, ...rest] : []).map(p => `<span class="f" data-id="${esc(p.id)}" data-name="${esc(p.name)}${score(p) ? " · ▲ " + score(p) : ""}">${pic(p, "face")}</span>`).join("")
+      + `<span class="face seat" title="Open seat"></span>`.repeat(open);
+    ring.querySelector(`[data-crown="${m.key}"]`).innerHTML = `<span class="faces">${faces}</span>`;
+    ring.querySelector(`[data-count="${m.key}"]`).textContent = `${m.tilt} · ${m.people.length ? m.people.length + " here" : "no one yet"}`;
+  }
+}
+ring.addEventListener("click", e => {
+  const f = e.target.closest(".f[data-id]");
+  if (f) return openCard(f.dataset.id);
+  const b = e.target.closest(".peak");
+  if (!b) return;
+  const i = MOUNTAINS.findIndex(m => m.key === b.dataset.k);
+  if (i === front) { pick(b.dataset.k); document.getElementById("vote").scrollIntoView({ behavior: "smooth" }); }
+  else { front = i; layout(); }
+});
+ring.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") { front = (front + (e.key === "ArrowRight" ? 1 : 4)) % 5; layout(); }
+});
+layout();
+addEventListener("resize", layout);
+
+/* the name cards */
+let filter = "all";
+const chips = document.getElementById("chips");
+chips.innerHTML = [`<button type="button" data-f="all" aria-pressed="true">Everyone</button>`]
+  .concat(MOUNTAINS.map(m => `<button type="button" data-f="${m.key}" aria-pressed="false">${m.name}</button>`)).join("");
+chips.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (b) pick(b.dataset.f);
+});
+// a chip is a tab: the chosen style's painting and meaning sit above its own board
+function pick(f) {
+  filter = f;
+  chips.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === f));
+  drawPanel();
+  drawCards();
+}
+function drawPanel() {
+  const m = byKey[filter], i = MOUNTAINS.indexOf(m);
+  document.getElementById("panel").innerHTML = m ? `<div class="panel">
+      <div class="figure">${ART[m.key]()}</div>
+      <div class="copy">
+        <span class="num">${two(i + 1)} / 05 · lives on ${m.land} · ${m.rule}</span>
+        <h3>${m.name}.</h3>
+        <span class="tilt">${m.tilt}</span>
+        <span class="kicker">GTM style</span>
+        <p class="line">${m.line}</p>
+        <div class="acts">${m.people.some(p => p.x) ? `<button class="follow" type="button" id="followAll">Follow them all on X</button>` : ""}
+          ${m.people.length ? `<button class="follow ghost" type="button" id="shareX">Share this board on X</button>` : ""}</div>
+      </div></div>` : "";
+  followAt = 0;
+}
+// X lets a page offer a follow but not make one, so each click opens the next person's follow
+// prompt on X in board order; one click per tab keeps the browser from blocking it
+let followAt = 0;
+document.getElementById("panel").addEventListener("click", e => {
+  const b = e.target.closest("#followAll"); if (!b) return;
+  const list = byKey[filter].people.filter(p => p.x);
+  if (followAt >= list.length) followAt = 0;
+  open(`https://x.com/intent/follow?screen_name=${encodeURIComponent(list[followAt].x)}`, "_blank", "noopener");
+  followAt++;
+  b.textContent = followAt < list.length ? `Follow next: @${list[followAt].x} · ${followAt + 1} / ${list.length}` : `All ${list.length} opened · start again`;
+});
+drawPanel();
+
+/* share a board: X takes only text and a link from a page, so the board is drawn into a short
+   moving GIF the visitor saves and drags into the post that opens; a phone's share sheet attaches it */
+const GIFENC = "https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js";
+function artImage(key) {
+  const defs = document.querySelector("svg defs").outerHTML;
+  const svg = ART[key]().replace('<svg class="art"', '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="500"').replace(">", ">" + defs);
+  return new Promise((ok, no) => {
+    const img = new Image();
+    img.onload = () => ok(img); img.onerror = no;
+    img.src = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  });
+}
+function wrap(x, text, maxW) {
+  const out = [""];
+  for (const w of text.split(" ")) {
+    const t = out[out.length - 1] ? out[out.length - 1] + " " + w : w;
+    if (x.measureText(t).width > maxW && out[out.length - 1]) out.push(w); else out[out.length - 1] = t;
+  }
+  return out;
+}
+async function boardGif(m) {
+  const { GIFEncoder, quantize, applyPalette } = await import(GIFENC);
+  const Wd = 960, H = 540, c = Object.assign(document.createElement("canvas"), { width: Wd, height: H });
+  const x = c.getContext("2d", { willReadFrequently: true });
+  const [art] = await Promise.all([artImage(m.key), document.fonts.ready]);
+  const people = m.people.slice(0, 10), ROW = 56, TOP = 92, SHOW = 7, roll = Math.max(0, people.length - SHOW) * ROW;
+  const FRAMES = 40, gif = GIFEncoder();
+  const INK = "#0E0E0E", MUTED = "#5E5D5A", PAPER = "#E4E3E0";
+  for (let f = 0; f < FRAMES; f++) {
+    // hold the top of the board, roll to its end, hold again
+    const t = Math.min(1, Math.max(0, (f - 8) / (FRAMES - 18))), off = roll * t * t * (3 - 2 * t);
+    x.fillStyle = PAPER; x.fillRect(0, 0, Wd, H);
+    x.fillStyle = MUTED; x.font = "500 13px 'Geist Mono', monospace"; x.fillText("GTM leaderboard · treg.to", 40, 44);
+    x.fillStyle = INK; x.font = "800 60px 'Inter Tight', sans-serif"; x.fillText(m.name + ".", 36, 110);
+    x.font = "800 22px 'Inter Tight', sans-serif"; x.fillText(m.tilt, 40, 146);
+    x.fillStyle = MUTED; x.font = "400 15px Inter, sans-serif";
+    wrap(x, m.line, 380).slice(0, 4).forEach((l, i) => x.fillText(l, 40, 182 + i * 22));
+    x.drawImage(art, 40, 250, 324, 270);
+    // the board, clipped to its column
+    x.save(); x.beginPath(); x.rect(460, TOP - 8, 470, SHOW * ROW + 8); x.clip();
+    people.forEach((p, i) => {
+      const y = TOP + i * ROW - off;
+      x.strokeStyle = "rgba(14,14,14,.18)"; x.beginPath(); x.moveTo(460, y + ROW - 4); x.lineTo(930, y + ROW - 4); x.stroke();
+      x.fillStyle = i < 3 ? INK : MUTED; x.font = "700 13px 'Geist Mono', monospace"; x.fillText(two(i + 1), 464, y + 30);
+      x.fillStyle = INK; x.beginPath(); x.arc(520, y + 25, 19, 0, 7); x.fill();
+      x.fillStyle = PAPER; x.font = "700 13px 'Inter Tight', sans-serif"; x.textAlign = "center"; x.fillText(initials(p.name), 520, y + 30); x.textAlign = "left";
+      x.fillStyle = INK; x.font = "700 17px 'Inter Tight', sans-serif"; x.fillText(p.name, 552, y + 22, 280);
+      x.fillStyle = MUTED; x.font = "400 13px Inter, sans-serif"; x.fillText(p.intro || p.role || "", 552, y + 42, 280);
+      x.textAlign = "right"; x.font = "500 13px 'Geist Mono', monospace"; x.fillText(+p.followers ? k(+p.followers) : "", 926, y + 30); x.textAlign = "left";
+    });
+    x.restore();
+    x.fillStyle = MUTED; x.font = "500 12px 'Geist Mono', monospace"; x.fillText("Vote at treg.to/gtm-leaderboard", 460, H - 26);
+    const { data } = x.getImageData(0, 0, Wd, H), palette = quantize(data, 128);
+    gif.writeFrame(applyPalette(data, palette), Wd, H, { palette, delay: f === FRAMES - 1 ? 1800 : f === 0 ? 1200 : 70 });
+  }
+  gif.finish();
+  return new Blob([gif.bytes()], { type: "image/gif" });
+}
+const SHARE = "Share this board on X";
+document.getElementById("panel").addEventListener("click", async e => {
+  const b = e.target.closest("#shareX"); if (!b || b.disabled) return;
+  const m = byKey[filter], url = `${location.origin}/gtm-leaderboard`;
+  const tags = m.people.filter(p => p.x).slice(0, 3).map(p => "@" + p.x).join(", ");
+  const text = `Who leads the ${m.name}s of GTM? ${tags} and more, on the GTM leaderboard. Vote for yours:`;
+  const phone = matchMedia("(pointer: coarse)").matches && !!navigator.canShare;
+  // the X tab opens now, inside the click, so the browser does not block it while the GIF is made
+  const tab = phone ? null : open("", "_blank");
+  b.disabled = true; b.textContent = "Making the GIF…";
+  let done = SHARE;
+  try {
+    const file = new File([await boardGif(m)], `gtm-leaderboard-${m.key}.gif`, { type: "image/gif" });
+    if (phone && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], text: `${text} ${url}` });
+    else {
+      Object.assign(document.createElement("a"), { href: URL.createObjectURL(file), download: file.name }).click();
+      const intent = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+      if (tab) { tab.opener = null; tab.location = intent; } else open(intent, "_blank", "noopener");
+      done = "GIF saved · drag it into your post";
+    }
+  } catch (err) {
+    if (err?.name !== "AbortError") { tab?.close(); done = "Could not make the GIF"; }
+  }
+  b.disabled = false; b.textContent = done;
+  setTimeout(() => { b.textContent = SHARE; }, 5000);
+});
+// where someone works, with the site's icon when the table names its domain
+const company = p => !p.company ? "" : `<span class="co">${/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(p.site || "")
+  ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(p.site)}&sz=32" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${esc(p.company)}</span>`;
+function drawCards(state) {
+  const el = document.getElementById("cards");
+  el.classList.toggle("one", filter !== "all");
+  if (state) { el.innerHTML = `<li class="empty">${state === "loading" ? "Finding everyone…" : "Could not load the people."}</li>`; return; }
+  const people = MOUNTAINS.filter(m => filter === "all" || m.key === filter)
+    .flatMap(m => m.people.map(p => [p, m])).sort((a, b) => score(b[0]) - score(a[0]));
+  el.innerHTML = people.length ? people.map(([p, m], i) => {
+    const on = votes.mine.has(p.id);
+    return `<li data-id="${esc(p.id)}"><span class="rk">${two(i + 1)}</span>${pic(p, "pic")}
+      <span><span class="who"><b>${esc(p.name)}</b>${company(p)}</span><small>${esc(p.intro || p.role)}</small></span>
+      <span class="style">${m.name}</span>
+      <span class="fol">${+p.followers ? k(+p.followers) : ""}</span>
+      ${p.x ? `<span class="xh"><a class="x" href="https://x.com/${esc(p.x)}" target="_blank" rel="noopener">@${esc(p.x)}</a>
+        <span class="xa"><button type="button" data-copy="@${esc(p.x)}">Copy</button><a href="https://x.com/intent/follow?screen_name=${encodeURIComponent(p.x)}" target="_blank" rel="noopener">Follow</a></span></span>` : "<span></span>"}
+      <button class="up" type="button" data-id="${esc(p.id)}" aria-pressed="${on}">▲ <span class="c">${score(p)}</span></button></li>`;
+  }).join("") : `<li class="empty">No one stands here yet.</li>`;
+}
+function drawAll() { rank(); drawCrowns(); drawCards(); }
+
+document.getElementById("cards").addEventListener("click", async e => {
+  const c = e.target.closest("[data-copy]");
+  if (c) {
+    try { await navigator.clipboard.writeText(c.dataset.copy); c.textContent = "Copied"; } catch { c.textContent = "Could not copy"; }
+    return setTimeout(() => { c.textContent = "Copy"; }, 1400);
+  }
+  if (e.target.closest(".pic")) return openCard(e.target.closest("li").dataset.id);
+  upvote(e.target.closest(".up"));
+});
+async function upvote(b) {
+  if (!b || b.disabled) return;
+  const id = b.dataset.id, up = !votes.mine.has(id);
+  b.disabled = true;
+  try {
+    const r = await fetch("/gtm-leaderboard/vote", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, up }) });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    // one upvote per person per browser and per network: an upvote already cast from this
+    // address comes back not counted
+    d.up ? votes.mine.add(id) : votes.mine.delete(id);
+    votes.counts[id] = d.upvotes;
+    drawAll();
+    if (card.open && card.dataset.id === id) openCard(id);
+    if (up && !d.up) document.querySelectorAll(`.up[data-id="${CSS.escape(id)}"]`).forEach(x => { x.title = "Someone on your network already upvoted them"; });
+  } catch { b.disabled = false; }
+}
+
+/* the card: the whole bio, their page, their style and their reach */
+const card = document.getElementById("card");
+// the bio is the X bio as written; its links (t.co and bare domains) stay clickable
+const linkify = t => esc(t).replace(/\bhttps?:\/\/[^\s<]+/g, u => `<a href="${u}" target="_blank" rel="noopener nofollow ugc">${u.replace(/^https?:\/\//, "")}</a>`)
+  .replace(/(^|\s)@(\w{1,15})\b/g, (_, s, h) => `${s}<a href="https://x.com/${h}" target="_blank" rel="noopener nofollow ugc">@${h}</a>`);
+function openCard(id) {
+  const m = MOUNTAINS.find(m => m.people.some(p => p.id === id)); if (!m) return;
+  const p = m.people.find(p => p.id === id), on = votes.mine.has(id);
+  card.dataset.id = id;
+  card.innerHTML = `<div class="in">
+    <button class="cls" type="button" aria-label="Close">✕</button>
+    <div class="head">${pic(p, "big")}<div><h3>${esc(p.name)}</h3>
+      ${p.x ? `<a class="handle" href="https://x.com/${esc(p.x)}" target="_blank" rel="noopener">x.com/${esc(p.x)}</a>` : ""}
+      ${company(p) ? `<div>${company(p)}</div>` : ""}</div></div>
+    ${p.bio || p.intro ? `<p class="bio">${linkify(p.bio || p.intro)}</p>` : ""}
+    <dl class="facts">
+      <div><dt>Followers</dt><dd>${+p.followers ? (+p.followers).toLocaleString("en-US") : "—"}</dd></div>
+      <div><dt>Rank on ${esc(m.land)}</dt><dd>${two(m.people.indexOf(p) + 1)} <small>▲ ${score(p)} upvote${score(p) === 1 ? "" : "s"}</small></dd></div>
+      <div class="style">${ART[m.key]()}<div><dt>Working style</dt><dd>${m.name}<small>${esc(m.line)}</small></dd></div></div>
+    </dl>
+    <div class="acts">
+      ${p.x ? `<a class="follow" href="https://x.com/intent/follow?screen_name=${encodeURIComponent(p.x)}" target="_blank" rel="noopener">Follow on X</a>
+      <a class="follow ghost" href="https://x.com/${esc(p.x)}" target="_blank" rel="noopener">Open their page</a>` : ""}
+      <button class="up" type="button" data-id="${esc(p.id)}" aria-pressed="${on}">▲ <span class="c">${score(p)}</span></button>
+    </div></div>`;
+  if (!card.open) card.showModal();
+}
+card.addEventListener("click", e => {
+  if (e.target === card || e.target.closest(".cls")) return card.close();
+  upvote(e.target.closest(".up"));
+});
+
+drawCards("loading");
+Promise.all([
+  fetch("/media/showcase/world.md").then(r => { if (!r.ok) throw new Error(r.status); return r.text(); }),
+  fetch("/gtm-leaderboard/votes", { credentials: "same-origin" }).then(r => r.ok ? r.json() : null).catch(() => null),
+]).then(([md, v]) => {
+  for (const r of readTable(md)) if (r.id) byKey[r.landscape?.toLowerCase()]?.all.push(r);
+  if (v) Object.assign(votes, { counts: v.counts || {}, mine: new Set(v.upvoted || []) });
+  drawAll();
+}).catch(() => drawCards("failed"));
+
+observe();
+</script>
+<script src="/sitetrack.js"></script>
+<script src="/adtrack.js"></script>
+<script src="/gtag.js"></script>
+</body>
+</html>

@@ -1050,6 +1050,15 @@
       "GET",
       "HEAD"
     ],
+    "name": "showcase_world_page",
+    "path": "/gtm-leaderboard"
+  },
+  {
+    "kind": "APIRoute",
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
     "name": "people_search_page",
     "path": "/people-search"
   },
@@ -3051,6 +3060,23 @@
     ],
     "name": "showcase_vote",
     "path": "/showcase/vote"
+  },
+  {
+    "kind": "APIRoute",
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "name": "showcase_world_votes",
+    "path": "/gtm-leaderboard/votes"
+  },
+  {
+    "kind": "APIRoute",
+    "methods": [
+      "POST"
+    ],
+    "name": "showcase_world_vote",
+    "path": "/gtm-leaderboard/vote"
   },
   {
     "kind": "APIRoute",

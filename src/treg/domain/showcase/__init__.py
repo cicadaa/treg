@@ -314,3 +314,30 @@ def clean_revision(raw: dict) -> dict:
 def changes(before: dict, after: dict) -> dict:
     """{field: [before, after]} for every revision field that differs."""
     return {f: [before.get(f), after.get(f)] for f in REVISION_FIELDS if before.get(f) != after.get(f)}
+
+
+# ---- the GTM world (/gtm-leaderboard): a hand-kept table of people, each on one landscape ----------
+
+WORLD_LANDSCAPES = ("volcano", "iceberg", "forest", "creek", "flower")
+_PERSON_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
+_TABLE_RULE = re.compile(r":?-+:?")
+
+
+def world_people(md: str) -> list[dict[str, str]]:
+    """The first markdown table of the world file, one dict per row keyed by its lower-cased header.
+    A row whose id is not a slug or whose landscape is not a known one is dropped: it could be neither
+    placed nor voted on."""
+    rows = [[c.strip() for c in line.strip().strip("|").split("|")]
+            for line in md.splitlines() if line.strip().startswith("|")]
+    if not rows:
+        return []
+    head = [h.lower() for h in rows[0]]
+    people = []
+    for row in rows[1:]:
+        if all(_TABLE_RULE.fullmatch(c) for c in row):
+            continue
+        entry = dict(zip(head, row + [""] * (len(head) - len(row))))
+        entry["landscape"] = entry.get("landscape", "").lower()
+        if _PERSON_ID.fullmatch(entry.get("id", "")) and entry["landscape"] in WORLD_LANDSCAPES:
+            people.append(entry)
+    return people

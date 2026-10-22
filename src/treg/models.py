@@ -2335,6 +2335,24 @@ class ShowcaseVote(SQLModel, table=True):
     created_at: NaiveUTC = Field(default_factory=_now)
 
 
+class ShowcasePersonVote(SQLModel, table=True):
+    """One upvote on one person of /gtm-leaderboard, cast without signing in: `person` is that
+    person's row id in media/showcase/world.md, `voter` the random id in the voter's cookie and
+    `address_hash` a keyed hash of their address (never the address). A person takes one upvote per
+    voter and one per address. Written only by `application.showcase.vote_person`; taking the
+    upvote back deletes the row."""
+
+    __table_args__ = (
+        UniqueConstraint("person", "voter", name="uq_showcasepersonvote_person_voter"),
+        UniqueConstraint("person", "address_hash", name="uq_showcasepersonvote_person_address"),
+    )
+    id: int | None = Field(default=None, primary_key=True)
+    person: str = Field(max_length=64)
+    voter: str = Field(max_length=64, index=True)
+    address_hash: str = Field(max_length=32)
+    created_at: NaiveUTC = Field(default_factory=_now)
+
+
 class TeamDatabase(SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint("org_id", name="uq_teamdatabase_org"),

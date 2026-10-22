@@ -11,7 +11,10 @@ sources:
   - src/treg/infra/imaging.py
   - src/treg/infra/media_store.py
   - src/treg/alembic/versions/0076_showcase_and_avatars.py
+  - src/treg/alembic/versions/0078_showcase_person_votes.py
   - src/treg/web/showcase.html
+  - src/treg/web/showcase-world.html
+  - src/treg/web/media/showcase/world.md
   - tests/test_showcase_leaderboard.py
   - tests/test_images.py
 related:
@@ -64,6 +67,7 @@ keys. Calls made with no key (the dashboard, some MCP connections) count only fo
 | `showcaseweek` | one row per source (a team, or one key) per UTC week | `refresh_activity` (`treg-worker showcase activity`) |
 | `showcasecursor` | the last call id counted into a source's weeks | `refresh_activity` |
 | `showcasevote` | one upvote per person per app (the row is the vote) | `vote` |
+| `showcasepersonvote` | one upvote per voter cookie and per address hash per person of `/gtm-leaderboard`, no sign-in | `vote_person` |
 
 Team deletion removes all of these with the team (`domain/governance/teams.py`), as it does every
 team's rows; the key links go before the team's keys.
@@ -104,6 +108,23 @@ board answers 304), so an approval or an upvote shows at once. There is no downv
 upvote back. Upvotes need the browser session, a verified person (no agent, demo or suspended identity), the same origin and a rate limit.
 App links carry `rel="noopener ugc"`: makers write the entries, and the referrer stays so they can
 see visits from treg. All showcase routes, like the page, 404 on a self-hosted registry.
+
+`/gtm-leaderboard` (`showcase-world.html`) is an editorial poster page: five GTM styles (Fullstack,
+Mastermind, Inventor, Wordsmith, Dealmaker), each on its landscape (volcano, iceberg, forest, creek,
+flower hill; the landscape is the key in the table and in votes), painted in inline SVG watercolor with no library and set on a
+ring, the front one largest, with the people who stand on each. Who stands where is one hand-kept
+markdown table, `media/showcase/world.md`: each row names its landscape and a lasting `id`
+(`domain.showcase.world_people` parses it and drops rows that could not be placed). People are
+upvoted without signing in: `GET /gtm-leaderboard/votes` returns the counts and this browser's
+own, and hands out the `treg_voter` cookie (a random id, httpOnly, long-lived) if it is missing.
+`POST /gtm-leaderboard/vote` needs the same origin and the same rate limit as app votes, and names
+only an id in the table, so nobody outside it collects votes. A person takes one upvote per voter
+cookie and one per address: the row keeps a keyed hash of the address (HMAC with the session
+secret), never the address, and an upvote from an address that already gave one comes back
+`up: false`, uncounted. So people behind one shared address share one upvote per person, the
+accepted cost of no sign-in. Only the cookie that cast an upvote can take it back. Within a landscape the most upvoted lead (ties keep the table's order) and the leaders float
+over its summit. A person taken out of the table keeps their rows but is no longer counted; renaming
+an id loses its votes.
 
 ## Pictures
 

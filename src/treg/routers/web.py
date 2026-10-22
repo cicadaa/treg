@@ -3969,6 +3969,16 @@ async def showcase_page(request: Request):
     return _static_page("showcase.html", request)
 
 
+@app.get("/gtm-leaderboard", include_in_schema=False)
+async def showcase_world_page(request: Request):
+    """An editorial poster page: five GTM landscapes (volcano, iceberg, forest, creek, flower hill)
+    painted in inline SVG, with the people who stand on each, read in the browser from the
+    hand-kept table media/showcase/world.md. Hosted only, like /showcase."""
+    if not _hosted():
+        raise HTTPException(status_code=404, detail="not found")
+    return _static_page("showcase-world.html", request)
+
+
 @app.get("/people-search", include_in_schema=False)
 async def people_search_page(request: Request):
     """Landing page for the people-search launch ("Claude for people search") — the destination the

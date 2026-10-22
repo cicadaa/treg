@@ -8,6 +8,7 @@ env admin token and names its signed-in operator in `actor`, which only that tok
 import hashlib
 import json
 import re
+import secrets
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
@@ -21,7 +22,7 @@ from ..infra.db import get_admin_session, get_session
 from ..infra.media_store import MediaStoreError
 from ..models import Org, User
 from .auth import _client_ip
-from .auth_helpers import _same_origin
+from .auth_helpers import _is_https, _same_origin
 from .images import _body, _off, _rejected, may_upload
 from .web import _hosted
 
@@ -95,6 +96,12 @@ class VoteIn(BaseModel):
     up: bool
 
 
+class PersonVoteIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    id: str = Field(min_length=1, max_length=64)
+    up: bool
+
+
 # ---- public --------------------------------------------------------------------------------------
 
 @router.get("/showcase/leaderboard", include_in_schema=False)
@@ -134,6 +141,47 @@ async def showcase_vote(body: VoteIn, request: Request, treg_session: str = Cook
         raise HTTPException(401, "sign in to vote")
     try:
         return _private(await showcase.vote(db, user, body.id, body.up, _client_ip(request)))
+    except showcase.ShowcaseError as exc:
+        raise _fail(exc) from None
+
+
+# People are upvoted without signing in: a random id in this cookie names the voter's browser.
+VOTER_COOKIE = "treg_voter"
+_VOTER = re.compile(r"[A-Za-z0-9_-]{32}")
+
+
+def _voter(request: Request) -> tuple[str, bool]:
+    """This browser's voter id, and whether it is new (a missing or malformed cookie gets a fresh one)."""
+    v = request.cookies.get(VOTER_COOKIE, "")
+    return (v, False) if _VOTER.fullmatch(v) else (secrets.token_urlsafe(24), True)
+
+
+def _as_voter(body, request: Request, voter: str, new: bool) -> JSONResponse:
+    resp = _private(body)
+    if new:
+        resp.set_cookie(VOTER_COOKIE, voter, httponly=True, samesite="lax", secure=_is_https(request),
+                        max_age=400 * 86400)
+    return resp
+
+
+@router.get("/gtm-leaderboard/votes", include_in_schema=False)
+async def showcase_world_votes(request: Request, db: AsyncSession = Depends(get_session)):
+    """Upvote counts for the people of /gtm-leaderboard, and this browser's own."""
+    _only_hosted()
+    voter, new = _voter(request)
+    return _as_voter(await showcase.person_votes(db, voter), request, voter, new)
+
+
+@router.post("/gtm-leaderboard/vote", include_in_schema=False)
+async def showcase_world_vote(body: PersonVoteIn, request: Request, db: AsyncSession = Depends(get_session)):
+    """Upvote one person of /gtm-leaderboard (`up: true`) or take this browser's upvote back."""
+    _only_hosted()
+    if not _same_origin(request):
+        raise HTTPException(403, "cross-origin vote rejected")
+    voter, new = _voter(request)
+    try:
+        return _as_voter(await showcase.vote_person(db, voter, body.id, body.up, _client_ip(request)),
+                         request, voter, new)
     except showcase.ShowcaseError as exc:
         raise _fail(exc) from None
 

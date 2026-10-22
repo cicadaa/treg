@@ -126,8 +126,9 @@ agents then built against a constitution that was wrong.
   migrations; the private admin service is their only runtime writer. Original reports remain
   owned by the feedback domain. See `docs/context/architecture/feedback.md`.
 - **Showcase leaderboard and pictures.** `application/showcase.py` is the only writer of
-  `ShowcaseApp`, `ShowcaseAppEvent`, `ShowcaseAppKey`, `ShowcaseWeek`, `ShowcaseCursor` and `ShowcaseVote` (team
-  deletion removes them with the team, as it does every team's rows); the private admin acts
+  `ShowcaseApp`, `ShowcaseAppEvent`, `ShowcaseAppKey`, `ShowcaseWeek`, `ShowcaseCursor`,
+  `ShowcaseVote` and `ShowcasePersonVote` (team deletion removes the app rows with the team, as it
+  does every team's rows; a person vote is anonymous, keyed by a voter cookie and an address hash); the private admin acts
   through its staff API (`/admin/showcase/*`), never the tables. `application/images.py` is the
   only writer of `user.avatar_key` and `org.avatar_key`. The public leaderboard never returns a
   team, an exact count or money. See `docs/context/architecture/showcase.md`.

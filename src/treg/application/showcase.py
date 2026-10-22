@@ -20,22 +20,26 @@ rule 3). Each change appends a `ShowcaseAppEvent` under the next version, in the
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
 import logging
 from collections.abc import Callable
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import ratestore
+from ..config import get_settings
 from ..domain import showcase as rules
 from ..domain.catalog import store as catalog_store
 from ..domain.identity.api_keys import is_machine_email
 from ..domain.images import ImageRejected, parse_key
 from ..infra.db import session_maker
 from ..models import (ApiKey, CallRecord, Membership, Org, ShowcaseApp, ShowcaseAppEvent, ShowcaseAppKey,
-                      ShowcaseCursor, ShowcaseVote, ShowcaseWeek, User)
+                      ShowcaseCursor, ShowcasePersonVote, ShowcaseVote, ShowcaseWeek, User)
 from ..timeutil import utcnow_naive
 from . import images
 
@@ -817,3 +821,60 @@ async def vote(db: AsyncSession, user: User, app_id: int, up: bool, client_ip: s
         await db.execute(delete(ShowcaseVote).where(ShowcaseVote.app_id == app_id, ShowcaseVote.user_id == user.id))
     await db.commit()
     return {"id": app_id, "up": up, "upvotes": (await _upvotes(db, app_id)).get(app_id, 0)}
+
+
+# ---- the GTM world: upvotes on the people of /gtm-leaderboard ------------------------------------
+
+# Who stands where is a hand-kept table bundled with the page; a vote may name only a person in it.
+WORLD_FILE = Path(__file__).resolve().parents[1] / "web" / "media" / "showcase" / "world.md"
+
+
+def world_ids() -> set[str]:
+    return {p["id"] for p in rules.world_people(WORLD_FILE.read_text(encoding="utf-8"))}
+
+
+def _address_hash(client_ip: str) -> str:
+    """A keyed hash of the voter's address: two votes from one address match, the address itself
+    is never stored."""
+    settings = get_settings()
+    secret = (settings.session_secret or settings.secret_key).encode()
+    return hmac.new(secret, f"gtm-vote:{client_ip}".encode(), hashlib.sha256).hexdigest()[:32]
+
+
+async def person_votes(db: AsyncSession, voter: str) -> dict:
+    """Upvote counts for the people in the world table, and this browser's own upvotes. A person
+    taken out of the table keeps their rows but is no longer counted or shown."""
+    ids = world_ids()
+    counts = {person: int(n) for person, n in (await db.execute(
+        select(ShowcasePersonVote.person, func.count()).group_by(ShowcasePersonVote.person))).all() if person in ids}
+    mine = sorted(p for p in (await db.execute(select(ShowcasePersonVote.person).where(
+        ShowcasePersonVote.voter == voter))).scalars().all() if p in ids)
+    return {"counts": counts, "upvoted": mine}
+
+
+async def vote_person(db: AsyncSession, voter: str, person: str, up: bool, client_ip: str) -> dict:
+    """Upvote one person of /gtm-leaderboard, or take this browser's upvote back. Commits. No sign-in:
+    a person takes one upvote per voter cookie and one per address, so an upvote from an address
+    that already gave one is not counted (`up` comes back false). Shares the app votes' rate limit,
+    so the two boards together cannot be flooded."""
+    if person not in world_ids():
+        raise ShowcaseError("not_found")
+    await ratestore.sweep(db, VOTE_NS)
+    if not await ratestore.rate_check(
+            db, VOTE_NS, [(f"v:{voter}", VOTE_MAX_PER_USER), (f"i:{client_ip}", VOTE_MAX_PER_IP)],
+            VOTE_WINDOW_S):
+        await db.commit()
+        raise ShowcaseError("rate_limited")
+    if up:
+        ins = _insert(db)(ShowcasePersonVote).values(
+            person=person, voter=voter, address_hash=_address_hash(client_ip), created_at=utcnow_naive())
+        await db.execute(ins.on_conflict_do_nothing())
+    else:
+        await db.execute(delete(ShowcasePersonVote).where(
+            ShowcasePersonVote.person == person, ShowcasePersonVote.voter == voter))
+    await db.commit()
+    mine = (await db.execute(select(ShowcasePersonVote.id).where(
+        ShowcasePersonVote.person == person, ShowcasePersonVote.voter == voter))).first() is not None
+    n = (await db.execute(select(func.count()).select_from(ShowcasePersonVote).where(
+        ShowcasePersonVote.person == person))).scalar_one()
+    return {"id": person, "up": mine, "upvotes": int(n)}
