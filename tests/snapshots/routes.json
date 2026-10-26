@@ -861,6 +861,15 @@
       "GET",
       "HEAD"
     ],
+    "name": "copy_virality_skill_md",
+    "path": "/skills/copy-virality/SKILL.md"
+  },
+  {
+    "kind": "APIRoute",
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
     "name": "feedback_md",
     "path": "/feedback.md"
   },
@@ -1034,6 +1043,24 @@
     ],
     "name": "aeo_page",
     "path": "/aeo"
+  },
+  {
+    "kind": "APIRoute",
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "name": "copy_virality_page",
+    "path": "/copy-virality"
+  },
+  {
+    "kind": "APIRoute",
+    "methods": [
+      "GET",
+      "HEAD"
+    ],
+    "name": "copy_virality_md",
+    "path": "/copy-virality.md"
   },
   {
     "kind": "APIRoute",
