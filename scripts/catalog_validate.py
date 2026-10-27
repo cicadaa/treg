@@ -1002,8 +1002,17 @@ def check_cost(cost: dict, where: str, errors: list[str], warnings: list[str],
         check_cost_table(cost, input_schema, where, errors, provider)
     if not has_table:
         settle = cost.get("settle")
-        if settle is not None and settle not in ("base", "modifiers", "usage", "quantity"):
-            fail(errors, where, "cost.settle currently supports only 'base', 'modifiers', 'usage' or 'quantity'")
+        if settle is not None and settle not in ("base", "modifiers", "usage", "quantity", "terminal_presence"):
+            fail(errors, where, "cost.settle currently supports only 'base', 'modifiers', 'usage', 'quantity' or 'terminal_presence'")
+        presence = cost.get("presence")
+        if settle == "terminal_presence":
+            if (cost.get("type") != "per_success" or "reported_charge" in cost
+                    or not isinstance(presence, dict) or set(presence) != {"row", "field"}
+                    or any(not isinstance(presence.get(key), str)
+                           or not JSON_PATH.fullmatch(presence[key]) for key in ("row", "field"))):
+                fail(errors, where, "cost.settle terminal_presence requires a per_success price and presence.row/field JSON paths")
+        elif presence is not None:
+            fail(errors, where, "cost.presence requires settle: terminal_presence")
         if settle == "quantity" or "quantity" in cost:
             check_cost_quantity(cost, input_schema, where, errors)
         if settle == "usage":
@@ -1431,11 +1440,20 @@ def main(argv: list[str]) -> int:
                 # verification observed (a DataForSEO extended row carries `observed_cost` only).
                 check_async_descriptor(effective_async, where, str(service), endpoint_index,
                                        _effective_cost(ep), errors)
+                if isinstance(cost, dict) and cost.get("settle") == "terminal_presence":
+                    body_fields = inp.get("body") or {}
+                    bounded = any(isinstance(spec, dict) and str(spec.get("type", "")).startswith("array")
+                                  and spec.get("required") and spec.get("minItems") == 1
+                                  and spec.get("maxItems") == 1 for spec in body_fields.values())
+                    if not ep.get("body_allowlist") or not bounded:
+                        fail(errors, where, "terminal_presence requires body_allowlist and a required one-item array")
                 terminal_ex = ep.get("terminal_example_response")
                 if terminal_ex is not None and not (CATALOG / str(terminal_ex)).is_file():
                     fail(errors, where, f"terminal_example_response '{terminal_ex}' does not exist")
             elif ep.get("terminal_example_response") is not None:
                 fail(errors, where, "terminal_example_response requires an async descriptor")
+            elif isinstance(cost, dict) and cost.get("settle") == "terminal_presence":
+                fail(errors, where, "terminal_presence requires an async descriptor")
             if ep.get("resource_ownership") is not None:
                 check_resource_ownership(ep["resource_ownership"], where, inp, errors)
             if ep.get("managed_resource") is not None:

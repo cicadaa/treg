@@ -82,7 +82,24 @@ def test_cost_modifiers_accept_only_supported_declarative_credit_rules():
 
     bad_settle: list[str] = []
     validator.check_cost(base | {"settle": "estimate"}, "catalog:test", bad_settle, [])
-    assert any("cost.settle currently supports only 'base', 'modifiers', 'usage' or 'quantity'" in error for error in bad_settle)
+    assert any("cost.settle currently supports only" in error for error in bad_settle)
+
+
+def test_terminal_presence_cost_requires_a_bounded_async_result_rule():
+    base = {
+        "type": "per_success", "value": 1, "currency": "credit", "per": 1,
+        "unit": "call", "source": "docs", "source_url": "https://example.com/pricing",
+        "checked": "2026-10-27", "confidence": "documented",
+        "settle": "terminal_presence", "presence": {"row": "data.0", "field": "email"},
+    }
+    errors: list[str] = []
+    validator.check_cost(base, "catalog:test", errors, [])
+    assert errors == []
+
+    invalid: list[str] = []
+    validator.check_cost(base | {"presence": {"row": "data..0", "field": "email"}},
+                         "catalog:test", invalid, [])
+    assert any("presence.row/field JSON paths" in error for error in invalid)
 
 
 def test_status_marker_references_must_exist_and_end_at_a_live_endpoint():

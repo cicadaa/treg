@@ -1159,6 +1159,13 @@ that row is left out of the advertised per-second rate span. The money fragment 
 have an answer before treg will spend its OWN money on an endpoint (see "platform-eligible" below),
 which is the whole reason the provenance keys exist.
 
+An asynchronous single-record `per_success` row whose provider reports no per-job charge may use
+`settle: terminal_presence` with `presence: {row: data.0, field: email}`. The fixed price is held
+through completion; a terminal row with an absent or empty field settles zero, and a nonempty
+field settles the held price. A missing or malformed row settles the reserve for review rather than
+assuming a free call. Validation requires `body_allowlist` and a required input array with exactly
+one item, so a shared key cannot buy several results under one hold.
+
 **`per` and `unit`.** Read a block as "`value` `currency` per `per` `unit`". SpyFu bills a CPM, so
 `value: 2.00, per: 1000, unit: row` — and `cost_view` divides, serving `usd: 0.002` per row. Hunter
 Domain Search charges 1 SEARCH credit per 1–10 emails returned (`per: 10, unit: record`), so `usd`
