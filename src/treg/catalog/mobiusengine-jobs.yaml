@@ -11,7 +11,9 @@ limits: "100 jobs per call; 30 requests at once; a search stops at 20 s; HTTP 40
 pricing_url: https://jobs.arihaan.ai/pay-per-job
 endpoints:
   - id: mobiusengine-jobs.jobs.search
+    verified: '2026-10-27'
     added: '2026-10-27'
+    example_response: examples/mobiusengine-jobs.jobs.search.json
     domain: jobs
     capability: companies.jobs.search
     platform: companies
@@ -47,7 +49,9 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.jobs.search.post
+    verified: '2026-10-27'
     added: '2026-10-27'
+    example_response: examples/mobiusengine-jobs.jobs.search.post.json
     domain: jobs
     capability: companies.jobs.search
     platform: companies
@@ -83,7 +87,9 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.jobs.search.full
+    verified: '2026-10-27'
     added: '2026-10-27'
+    example_response: examples/mobiusengine-jobs.jobs.search.full.json
     domain: jobs
     capability: companies.jobs.search
     platform: companies
@@ -117,7 +123,9 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.jobs.search.full.post
+    verified: '2026-10-27'
     added: '2026-10-27'
+    example_response: examples/mobiusengine-jobs.jobs.search.full.post.json
     domain: jobs
     capability: companies.jobs.search
     platform: companies
@@ -211,7 +219,9 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.jobs.count
+    verified: '2026-10-27'
     added: '2026-10-27'
+    example_response: examples/mobiusengine-jobs.jobs.count.json
     domain: jobs
     capability: companies.jobs.search.count
     platform: companies
@@ -243,7 +253,9 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.jobs.count.post
+    verified: '2026-10-27'
     added: '2026-10-27'
+    example_response: examples/mobiusengine-jobs.jobs.count.post.json
     domain: jobs
     capability: companies.jobs.search.count
     platform: companies
@@ -274,7 +286,9 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.account.balance
+    verified: '2026-10-27'
     added: '2026-10-27'
+    example_response: examples/mobiusengine-jobs.account.balance.json
     kind: account
     capability: account.usage
     platform: account
