@@ -113,6 +113,9 @@ _QUOTAS: dict[str, dict] = {
     "aiark": {"limit": 15000, "period": "billing", "resets_at_rule": "monthly subscription; date not reported by API"},
 }
 _RATE_LIMITS: dict[str, dict] = {
+    # The published 60 requests/second is shared across enrichment and result polling. Leave
+    # headroom for account checks and manual use of the same key; BYOK bypasses this pace.
+    "dropcontact": {"limit": 30, "window_s": 1, "source": "policy"},
     "enrichlayer": {"limit": 300, "window_s": 60, "source": "docs"},
     # Agent's entry-tier limit is one request per second. Shared-key smoothing is provider-wide,
     # so Search also uses this conservative pace even though its own allowance is higher.
