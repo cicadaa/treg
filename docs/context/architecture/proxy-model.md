@@ -757,7 +757,8 @@ a web process. The endpoint instead declares `spooled_response: true` and
 
 Catalog entries can opt into `strict_query`: `_enforce_catalog_query` rejects bodies,
 undeclared/duplicate query parameters, missing required inputs and unsupported enum values before
-credential selection. They can separately opt into `body_allowlist`: `_enforce_catalog_body`
+credential selection. A declared path placeholder is allowed through this check and consumed
+before relay; undeclared query fields remain rejected. They can separately opt into `body_allowlist`: `_enforce_catalog_body`
 rejects undeclared top-level JSON fields, missing required fields, invalid declared scalar values,
 and arrays outside their declared cardinality or item enum. An omitted optional array is allowed;
 its cardinality applies only when the caller supplies it. Both checks apply to catalog calls on every

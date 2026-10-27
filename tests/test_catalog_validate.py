@@ -895,6 +895,14 @@ def test_strict_query_contract_validation(patch, valid):
     assert bool(errors) is not valid
 
 
+def test_strict_query_accepts_a_declared_path_parameter():
+    ep = {'strict_query': True, 'method': 'GET', 'path': '/jobs/{id}',
+          'input': {'pathParams': {'id': {'type': 'string', 'required': True}}}}
+    errors = []
+    validator.check_strict_query(ep, 'example', errors)
+    assert not errors
+
+
 @pytest.mark.parametrize('patch,valid', [
     ({}, True),
     ({'strict_body': 'yes'}, False),

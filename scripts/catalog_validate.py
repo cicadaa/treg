@@ -241,13 +241,19 @@ def check_strict_query(ep: dict, where: str, errors: list[str]) -> None:
         fail(errors, where, "strict_query must be a boolean")
     if ep["strict_query"] is not True:
         return
-    fields = (ep.get("input") or {}).get("queryParams")
-    if ep.get("method") != "GET" or not isinstance(fields, dict) or not fields:
-        fail(errors, where, "strict_query requires a GET with declared queryParams")
+    inp = ep.get("input") or {}
+    fields = inp.get("queryParams") or {}
+    path_fields = inp.get("pathParams") or {}
+    if ep.get("method") != "GET" or not isinstance(fields, dict) or not isinstance(path_fields, dict) \
+            or not (fields or path_fields):
+        fail(errors, where, "strict_query requires a GET with declared queryParams or pathParams")
         return
-    if "{" in str(ep.get("path", "")) or (ep.get("input") or {}).get("body"):
-        fail(errors, where, "strict_query cannot use path placeholders or body inputs")
-    for name, spec in fields.items():
+    if inp.get("body"):
+        fail(errors, where, "strict_query cannot use body inputs")
+    placeholders = set(re.findall(r"{(\w+)}", str(ep.get("path", ""))))
+    if placeholders != set(path_fields):
+        fail(errors, where, "strict_query pathParams must match path placeholders")
+    for name, spec in (fields | path_fields).items():
         if not isinstance(spec, dict):
             fail(errors, where, f"strict query field {name} must be a mapping")
         elif "enum" in spec and (not isinstance(spec["enum"], list) or not spec["enum"]
@@ -705,7 +711,7 @@ def check_async_descriptor(descriptor: object, where: str, provider: str,
             if not isinstance(values, list) or (name == "success" and not values) \
                     or (name in {"progress", "billed_failure"} and not values):
                 fail(errors, where, f"async.status.{name} must be a non-empty list")
-            elif any(isinstance(value, (dict, list, bool)) or value is None
+            elif any(isinstance(value, (dict, list)) or value is None
                      or not str(value).strip() for value in values):
                 fail(errors, where, f"async.status.{name} values must be non-empty strings or numbers")
         groups = [values for values in (progress, success, failure, billed_failure)
