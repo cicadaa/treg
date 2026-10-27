@@ -3368,6 +3368,25 @@ FINDYMAIL = OAuthProvider(
 )
 
 
+DROPCONTACT = OAuthProvider(
+    service="dropcontact", display_name="Dropcontact", auth_kind="key",
+    token_label="API key", token_placeholder="your Dropcontact API key",
+    token_header="X-Access-Token", token_format="{secret}",
+    setup_url="https://app.dropcontact.com/",
+    setup_action_label="Get your Dropcontact API key",
+    setup_steps=("Sign in to Dropcontact and open Integrations & API.",
+                 "Copy your API key and paste it here."),
+    setup_note="Email and contact enrichment spend credits on verified results. Connection verification reads the balance without spending a credit.",
+    auth_uri="", token_uri="", scopes={}, client_id_setting="", client_secret_setting="",
+    category="Enrichment",
+    summary="Find and verify business emails, enrich contacts and their companies, and clean job titles.",
+    base_url="https://api.dropcontact.com",
+    docs_url="https://developer.dropcontact.com/",
+    probe_path="/v1/enrich/all", probe_method="POST", probe_json={"data": [{}]},
+    token_reject_field="error",
+)
+
+
 BRANDDEV = OAuthProvider(
     service="branddev",
     display_name="Context.dev",
@@ -4021,7 +4040,7 @@ REGISTRY: dict[str, OAuthProvider] = {
         SCRAPEGRAPHAI, SERPER, LITESCRAPE, CLORO,
         # more Enrichment API-key providers
         LUSHA, CORESIGNAL, DIFFBOT, THECOMPANIESAPI, LEADMAGIC, ENRICHLAYER, FIBER_AI, CRUSTDATA, AVIATO,
-        COMPANYENRICH, OCEANIO, ADYNTEL, TOMBA, TRESTLEIQ, HLRLOOKUP, PREDICTLEADS, FINDYMAIL, BRANDDEV, ICYPEAS, LEADSFORGE,
+        COMPANYENRICH, OCEANIO, ADYNTEL, TOMBA, TRESTLEIQ, HLRLOOKUP, PREDICTLEADS, FINDYMAIL, DROPCONTACT, BRANDDEV, ICYPEAS, LEADSFORGE,
         INFLUENCERSCLUB, VILLAGE,
         # Market data API-key providers
         COINGECKO, POLYGON, FINNHUB, TWELVEDATA, FMP, EODHD, MARKETSTACK, TIINGO,

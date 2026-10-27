@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Dropcontact">
+  <rect width="64" height="64" rx="14" fill="#123A37"/>
+  <path d="M20 15h13c11 0 18 7 18 17S44 49 33 49H20V15zm12 25c6 0 10-3 10-8s-4-8-10-8h-3v16h3z" fill="#FFF"/>
+</svg>
