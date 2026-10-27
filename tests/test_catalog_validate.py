@@ -602,7 +602,7 @@ def test_flat_price_usage_settlement_is_accepted():
     (lambda c: c.update(usage={"path": "usage.cost", "unit": "tokens"}),
      "needs a numeric fx.yaml unit_rates_usd entry"),
     (lambda c: c.update(settle="base"), "usage is only valid with settle: usage"),
-    (lambda c: c.update(settle="later"), "supports only 'base', 'modifiers', 'usage' or 'quantity'"),
+    (lambda c: c.update(settle="later"), "supports only 'base', 'modifiers', 'usage', 'quantity' or 'terminal_presence'"),
 ])
 def test_flat_price_usage_settlement_rejects_bad_shapes(mutate, message):
     cost = _flat_usage_cost()
