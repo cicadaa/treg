@@ -415,6 +415,17 @@ async def _blitzapi(c, key):
                     f"per-endpoint limit {rps if type(rps) is int else 'unknown'} requests/s"}
 
 
+async def _mobiusengine_jobs(c, key):
+    # Free: GET /v1/balance spends nothing and answers 401 for a bad key. A wallet account answers its prepaid
+    # dollars; an account on a monthly plan answers mode "plan" and no balance, which is not a usable slot.
+    d = await _get(c, "https://jobs-api.arihaan.ai/v1/balance", headers={"x-api-key": key})
+    left = _finite(d.get("balance_usd")) if isinstance(d, dict) and d.get("mode") == "wallet" else None
+    if left is None or left < 0:
+        raise ValueError("MobiusEngine Jobs Data returned no pay-per-job balance")
+    return {"value": left, "unit": "USD left",
+            "note": "prepaid pay-per-job balance; HTTP 402 insufficient_balance at zero"}
+
+
 async def _dropleads(c, key):
     d = await _get(c, "https://prime.dropleads.io/api/v2/prime-db/credits/balance",
                    headers={"X-API-Key": key})
@@ -1035,6 +1046,7 @@ BALANCE_ROUTES = {
     "fetchinio": _fetchinio,
     "sixtyfour": _sixtyfour,
     "blitzapi": _blitzapi,
+    "mobiusengine_jobs": _mobiusengine_jobs,
     "prospeo": _prospeo,
     "aiark": _aiark,
     "wiza": _wiza,
