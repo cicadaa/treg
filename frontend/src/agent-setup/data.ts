@@ -52,7 +52,7 @@ export function directiveSetupText(base: string, team?: string, token?: string, 
   const shown = token ? (masked ? token.slice(0,14)+'••••••••••••••••' : token) : ''
   const teamName = team || '<team-slug>'
   const install = token
-    ? `1. curl -fsSL ${root}/install.sh | sh -s -- --token ${shown}\n2. treg\n   It should print team ${teamName} and a balance. If it does not, stop and show me the output.`
+    ? `1. curl -fsSL ${root}/install.sh | sh -s -- --token ${shown}\n2. treg\n   It should print team ${teamName} and a balance.`
     : `1. curl -fsSL ${root}/install.sh | sh\n2. treg login\n   Open the link it prints for me, then run treg to confirm.`
   return `Install treg for me and sign it in to my team ${teamName}. I approve these steps; run them in order.\n\n${install}\n\n`
     + `If you cannot run shell commands but can add an MCP server, add ${root}/mcp/ as a remote MCP server instead, and tell me to finish the sign-in there.\n\n`
