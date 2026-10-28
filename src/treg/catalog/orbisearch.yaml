@@ -22,7 +22,7 @@ endpoints:
         email: {type: string, required: true, example: "support@orbisearch.com"}
         timeout: {type: integer, required: false, min: 3, max: 97, default: 97, note: "Upstream verification timeout in seconds."}
       note: "A 200 response can be safe, risky, invalid or unknown; all returned verdicts cost 0.2 credits."
-    test_request: {queryParams: {email: "support@orbisearch.com", timeout: 70}}
+    test_request: {queryParams: {email: "support@orbisearch.com", timeout: 20}}
     cost:
       type: per_call
       value: 0.2
@@ -59,7 +59,7 @@ endpoints:
         linkedin_url: {type: string, required: false, maxLength: 2048}
         timeout: {type: integer, required: false, min: 30, max: 97, default: 97}
       note: "Send a LinkedIn person URL, or at least one name part with a company domain. A 200 response with status unknown and email null is a charged miss, including timeout."
-    test_request: {body: {first_name: Satya, last_name: Nadella, domain: microsoft.com, timeout: 70}}
+    test_request: {body: {first_name: Satya, last_name: Nadella, domain: microsoft.com, timeout: 30}}
     cost:
       type: per_call
       value: 1

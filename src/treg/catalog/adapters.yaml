@@ -21,6 +21,7 @@ adapters:
     accepts: [[first_name, last_name, domain], [linkedin_url]]
     in: {first_name: body.first_name, last_name: body.last_name,
          domain: body.domain, linkedin_url: body.linkedin_url}
+    const: {body.timeout: 30}
     out: {email: email, first_name: first_name, last_name: last_name,
           verified: "status == 'safe'", confidence: "confidence / 100"}
     miss: "email == null"
@@ -492,8 +493,10 @@ adapters:
   orbisearch.people.email.verify:
     accepts: [[email]]
     in: {email: queryParams.email}
+    const: {queryParams.timeout: 20}
     out: {valid: "status == 'safe'", status: status, score: confidence}
     miss: "status == null"
+    verdict: "choose(is_domain_catch_all == true, choose(status == 'risky', 'catch_all', status), status)"
     verdicts: {safe: valid}
   anymailfinder.people.email.verify:
     accepts: [[email]]
