@@ -23,7 +23,7 @@ endpoints:
       status: {path: qualification, progress: [ongoing], success: [valid, invalid]}
       result: {path: email}
       interval: 2
-      max_age: 86400
+      max_age: 1800
     body_allowlist: true
     input:
       bodyType: json
@@ -99,7 +99,7 @@ endpoints:
       status: {path: qualification, progress: [ongoing], success: [valid, invalid]}
       result: {path: qualification}
       interval: 2
-      max_age: 86400
+      max_age: 1800
     body_allowlist: true
     input:
       bodyType: json
@@ -160,7 +160,7 @@ endpoints:
       status: {path: qualification, progress: [ongoing], success: [found, not_found]}
       result: {path: number}
       interval: 2
-      max_age: 86400
+      max_age: 1800
     body_allowlist: true
     input:
       bodyType: json
