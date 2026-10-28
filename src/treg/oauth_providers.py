@@ -3412,7 +3412,7 @@ DROPCONTACT = OAuthProvider(
     setup_note="Email and contact enrichment spend credits on verified results. Connection verification reads the balance without spending a credit.",
     auth_uri="", token_uri="", scopes={}, client_id_setting="", client_secret_setting="",
     category="Enrichment",
-    summary="Find and verify B2B work emails in real time, enrich contacts, and clean job titles; Dropcontact says it uses no contact database and was audited by France's CNIL.",
+    summary="Find and verify B2B work emails, enrich contacts and companies, and clean job titles.",
     base_url="https://api.dropcontact.com",
     docs_url="https://developer.dropcontact.com/",
     probe_path="/v1/enrich/all", probe_method="POST", probe_json={"data": [{}]},
