@@ -375,9 +375,6 @@ RESERVE_DEFAULT_SOURCES = {"docs", "observed"}
 UNDECLARED_RESERVE = frozenset({
     "dataforseo.x.on-page-page-screenshot",
     "findymail.intellimatch.search",
-    "findymail.lookalike.search",
-    "findymail.search.domain",
-    "findymail.search.employees",
     "seranking.google.keywords.ideas",
     "seranking.google.keywords.volume",
     "seranking.web.backlinks.summary",
@@ -422,8 +419,8 @@ def check_cost_settle_count(cost: dict, example: object, where: str, errors: lis
             or not JSON_PATH.fullmatch(count["path"])):
         fail(errors, where, "cost.settle requires {count: {path: a JSON path}}")
         return
-    if "rows" not in (cost.get("reserve") or {}):
-        fail(errors, where, "cost.settle.count requires cost.reserve.rows")
+    if not isinstance(cost.get("reserve"), dict):
+        fail(errors, where, "cost.settle.count requires cost.reserve")
     if (cost.get("per") or 1) != 1:
         fail(errors, where, "cost.settle.count requires per: 1")
     if example is not None and not isinstance(json_path(example, count["path"]), list):
@@ -1516,10 +1513,11 @@ def main(argv: list[str]) -> int:
                         example = json.loads(ex_file.read_text()) if ep.get("example_response") \
                             and ex_file.is_file() else None
                         check_cost_settle_count(cost, example, where, errors)
-                    if (cost.get("type") == "per_result" and cost.get("unit") in _ENTITY_UNITS
-                            and ("reserve" in cost) == (eid in UNDECLARED_RESERVE)):
-                        fail(errors, where, "remove from UNDECLARED_RESERVE" if "reserve" in cost
-                             else "a per_result price in an entity unit needs cost.reserve")
+                    if "reserve" in cost and eid in UNDECLARED_RESERVE:
+                        fail(errors, where, "remove from UNDECLARED_RESERVE")
+                    elif ("reserve" not in cost and eid not in UNDECLARED_RESERVE
+                          and cost.get("type") == "per_result" and cost.get("unit") in _ENTITY_UNITS):
+                        fail(errors, where, "a per_result price in an entity unit needs cost.reserve")
                     if service == "tavily":
                         check_tavily_rates(eid, cost, where, errors)
                     if service == "octen":

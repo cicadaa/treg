@@ -1244,7 +1244,7 @@ the caller's `param` (a declared integer `body.` or `queryParams.` field), else 
 to `max` and rounded up to whole `per` blocks; `source` (`docs` or `observed`) says where the
 default came from, because an unsourced default silently decides the hold.
 `cost.settle: {count: {path}}` then settles the length of that response list, capped at the hold;
-it needs `reserve.rows`, `per: 1`, no `reported_charge`, and a list at `path` in the example. A
+it needs `reserve`, `per: 1`, no `reported_charge`, and a list at `path` in the example. A
 `per_result` cost in an entity unit (`resolve._ENTITY_UNITS`) must declare `reserve`;
 `catalog_validate.UNDECLARED_RESERVE` lists the rows that still infer it from the unit, and only
 shrinks.

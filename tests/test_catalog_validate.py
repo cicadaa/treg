@@ -1179,7 +1179,7 @@ def test_settle_count_needs_a_rows_hold_one_row_per_price_and_a_list_in_the_exam
     counted = {"count": {"path": "keywords"}}
     assert _cost_errors(_per_result_cost(settle=counted), example) == []
     for cost, message in (
-        (_per_result_cost(settle=counted, reserve={"entities": {}}), "requires cost.reserve.rows"),
+        (_per_result_cost(settle=counted, reserve=None), "requires cost.reserve"),
         (_per_result_cost(settle=counted, per=10), "requires per: 1"),
         (_per_result_cost(settle=counted, reported_charge={"path": "cost", "unit": "usd"}),
          "without cost.settle"),

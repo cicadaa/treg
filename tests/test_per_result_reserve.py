@@ -103,3 +103,21 @@ async def test_a_block_priced_row_holds_whole_blocks(
         r = await clients.post(f"/call/{LOOKALIKE}", json={"seed": "stripe.com", "limit": limit})
     assert r.status_code == 200, r.text
     assert await _hold_and_charge(clients, before) == (hold, credits * 19_800)
+
+
+@pytest.mark.parametrize(("returned", "charge"), [(0, 0), (1, 179), (5, 179)])
+async def test_an_entity_hold_settles_the_returned_rows_up_to_the_entities_asked(
+    clients: AsyncClient, monkeypatch, platform, returned, charge,
+):
+    platform("seranking")
+    _declare(monkeypatch, REFDOMAINS, reserve={"entities": {}}, settle={"count": {"path": "refdomains"}})
+
+    def upstream(request):
+        return _dropleads_response(200, {"refdomains": [{"refdomain": f"d{i}.com"} for i in range(returned)]})
+
+    async with AsyncClient(transport=httpx.MockTransport(upstream)) as vendor:
+        monkeypatch.setattr(A.app.state, "http", vendor)
+        before = len(await _entries(clients))
+        r = await clients.get(f"/call/{REFDOMAINS}", params={"target": "example.com", "limit": "300"})
+    assert r.status_code == 200, r.text
+    assert await _hold_and_charge(clients, before) == (179, charge)
