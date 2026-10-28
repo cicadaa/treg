@@ -249,8 +249,6 @@ def settle(basis: dict, evidence: dict[str, Any]) -> int:
             found = _path(row, amount["field"])
             if found is None or found == "" or found == []:
                 return 0
-            if isinstance(found, (str, list)):
-                return max(0, int(basis.get("reserve_micro") or 0))
         return max(0, int(basis.get("reserve_micro") or 0))
     if kind == "table":
         return table_amount_micro(
