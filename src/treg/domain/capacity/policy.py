@@ -38,6 +38,7 @@ _KNOWN: dict[str, tuple[str, str, str]] = {
     "leadmagic": ("credits", "manual", "api"),
     "findymail": ("credits", "manual", "api"),
     "anymailfinder": ("credits", "manual", "api"),
+    "enrow": ("credits", "manual", "api"),
     "leadsforge": ("credits", "manual", "api"),
     "thecompaniesapi": ("credits", "manual", "api"),
     "tomba": ("monthly_quota", "quota_reset", "api"),
@@ -117,6 +118,7 @@ _QUOTAS: dict[str, dict] = {
 }
 _RATE_LIMITS: dict[str, dict] = {
     "orbisearch": {"limit": 15, "window_s": 1, "source": "policy"},
+    "enrow": {"limit": 8, "window_s": 1, "source": "policy"},
     # The published 60 requests/second is shared across enrichment and result polling. Leave
     # headroom for account checks and manual use of the same key; BYOK bypasses this pace.
     "dropcontact": {"limit": 30, "window_s": 1, "source": "policy"},
