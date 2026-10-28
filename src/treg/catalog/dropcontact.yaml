@@ -30,7 +30,7 @@ endpoints:
     input:
       bodyType: json
       body:
-        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, note: 'One person with first_name + last_name or full_name, plus company, website, or company_linkedin.'}
+        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_any: [first_name, last_name, full_name], note: 'One person with first_name + last_name or full_name, plus company, website, or company_linkedin.'}
         language: {type: string, required: false, enum: [en, fr]}
         siren: {type: boolean, required: false}
       note: A verified email is one credit; a no-email result is refunded. Poll dropcontact.jobs.get with the returned request_id.
@@ -41,7 +41,7 @@ endpoints:
       per: 1
       unit: call
       settle: terminal_presence
-      presence: {row: data.0, field: email}
+      presence: {row: data.0, field: email, request_field: data.0.email}
       source: observed
       source_url: https://developer.dropcontact.com/#credits-count
       checked: '2026-10-27'
@@ -66,7 +66,7 @@ endpoints:
     input:
       bodyType: json
       body:
-        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, note: 'One object containing a public person-profile URL in linkedin.'}
+        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_all: [linkedin], note: 'One object containing a public person-profile URL in linkedin.'}
         language: {type: string, required: false, enum: [en, fr]}
       note: A valid LinkedIn profile can find a contact without a company field; Sales Navigator URLs are not documented.
     cost: *single_find_cost
@@ -89,7 +89,7 @@ endpoints:
     input:
       bodyType: json
       body:
-        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, note: 'One object containing an email field.'}
+        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_all: [email], note: 'One object containing an email field.'}
         language: {type: string, required: false, enum: [en, fr]}
       note: Dropcontact charges one credit for a supplied email even when its qualification is invalid.
     test_request: {body: {data: [{email: support@dropcontact.com}]}}
@@ -125,7 +125,7 @@ endpoints:
     input:
       bodyType: json
       body:
-        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, note: 'One person with a documented contact and company identifier, or a LinkedIn profile URL.'}
+        data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_any: [first_name, last_name, full_name, linkedin, email], note: 'One person with a documented contact and company identifier, or a LinkedIn profile URL.'}
         language: {type: string, required: false, enum: [en, fr]}
         siren: {type: boolean, required: false}
       note: Growth may return job, job_level, job_function, industry, employee_count, website, and legal fields; fields depend on the input and match.
