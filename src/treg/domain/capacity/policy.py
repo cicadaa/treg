@@ -19,6 +19,7 @@ AGGREGATORS = ("orthogonal", "monid")
 # imports as unknown/unknown and is flagged by the sweep - a policy row must be classified by a
 # person, never guessed by code.
 _KNOWN: dict[str, tuple[str, str, str]] = {
+    "orbisearch": ("credits", "manual", "api"),
     "theirstack": ("credits", "manual", "api"),
     "enrichlayer": ("credits", "auto_recharge", "api"),
     "adyntel": ("credits", "manual", "manual"),
@@ -115,6 +116,7 @@ _QUOTAS: dict[str, dict] = {
     "aiark": {"limit": 15000, "period": "billing", "resets_at_rule": "monthly subscription; date not reported by API"},
 }
 _RATE_LIMITS: dict[str, dict] = {
+    "orbisearch": {"limit": 15, "window_s": 1, "source": "policy"},
     # The published 60 requests/second is shared across enrichment and result polling. Leave
     # headroom for account checks and manual use of the same key; BYOK bypasses this pace.
     "dropcontact": {"limit": 30, "window_s": 1, "source": "policy"},
