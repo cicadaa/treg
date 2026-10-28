@@ -71,16 +71,18 @@ async def test_an_undeclared_entity_unit_row_keeps_its_one_entity_hold(
     clients: AsyncClient, monkeypatch, platform,
 ):
     platform("seranking")
+    endpoint = "seranking.web.url.metrics"
+    assert "reserve" not in catalog_store.load().by_id[endpoint]["cost"]
 
     def upstream(request):
-        return _dropleads_response(200, {"refdomains": [{"refdomain": f"d{i}.com"} for i in range(250)]})
+        return _dropleads_response(200, {"pages": [{"url": f"https://example.com/{i}"} for i in range(250)]})
 
     async with AsyncClient(transport=httpx.MockTransport(upstream)) as vendor:
         monkeypatch.setattr(A.app.state, "http", vendor)
         before = len(await _entries(clients))
-        r = await clients.get(f"/call/{REFDOMAINS}", params={"target": "example.com", "limit": "300"})
+        r = await clients.get(f"/call/{endpoint}", params={"target": "example.com", "limit": "300"})
     assert r.status_code == 200, r.text
-    assert await _hold_and_charge(clients, before) == (179, 179)
+    assert await _hold_and_charge(clients, before) == (15 * 179, 15 * 179)
 
 
 @pytest.mark.parametrize(("limit", "hold"), [(15, 2 * 19_800), (20, 2 * 19_800), (21, 3 * 19_800)])
@@ -121,3 +123,28 @@ async def test_an_entity_hold_settles_the_returned_rows_up_to_the_entities_asked
         r = await clients.get(f"/call/{REFDOMAINS}", params={"target": "example.com", "limit": "300"})
     assert r.status_code == 200, r.text
     assert await _hold_and_charge(clients, before) == (179, charge)
+
+
+@pytest.mark.parametrize(("params", "returned", "hold", "charge"), [
+    ({"keyword": "shoes", "se": "g_us", "size": 300}, 250, 300 * 500, 250 * 500),
+    ({"keyword": "shoes", "se": "g_us"}, 100, 100 * 500, 100 * 500),
+])
+async def test_a_nested_body_param_sizes_the_hold_for_a_provider_row_count(
+    clients: AsyncClient, monkeypatch, platform, params, returned, hold, charge,
+):
+    platform("serpstat")
+    endpoint = "serpstat.google.keywords.ideas"
+    _declare(monkeypatch, endpoint,
+             reserve={"rows": {"param": "body.params.size",
+                               "default": {"value": 100, "source": "docs"}, "max": 1000}})
+
+    def upstream(request):
+        return _dropleads_response(200, {"id": "1", "result": {"data": [{"keyword": f"k{i}"} for i in range(returned)]}})
+
+    async with AsyncClient(transport=httpx.MockTransport(upstream)) as vendor:
+        monkeypatch.setattr(A.app.state, "http", vendor)
+        before = len(await _entries(clients))
+        r = await clients.post(f"/call/{endpoint}", json={
+            "id": "1", "method": "SerpstatKeywordProcedure.getRelatedKeywords", "params": params})
+    assert r.status_code == 200, r.text
+    assert await _hold_and_charge(clients, before) == (hold, charge)

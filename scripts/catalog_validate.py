@@ -375,16 +375,11 @@ RESERVE_DEFAULT_SOURCES = {"docs", "observed"}
 UNDECLARED_RESERVE = frozenset({
     "dataforseo.x.on-page-page-screenshot",
     "findymail.intellimatch.search",
-    "seranking.google.keywords.ideas",
     "seranking.google.keywords.volume",
     "seranking.web.backlinks.summary",
-    "seranking.web.linking_domains.list",
     "seranking.web.url.metrics",
     "serpstat.google.domain.overview",
-    "serpstat.google.domain.ranked_keywords",
-    "serpstat.google.keywords.ideas",
     "serpstat.google.keywords.volume",
-    "serpstat.web.linking_domains.list",
 })
 
 
