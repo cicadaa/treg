@@ -24,7 +24,7 @@ endpoints:
       poll: {endpoint: dropcontact.jobs.get, param: {in: pathParams, name: request_id}}
       status: {path: success, progress: [false], success: [true], failure: []}
       result: {path: data}
-      interval: 30
+      interval: 10
       max_age: 1800
     body_allowlist: true
     input:
