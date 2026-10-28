@@ -65,6 +65,8 @@ from treg.domain.catalog.store import COST_UNITS as _UNITS  # noqa: E402
 from treg.domain.catalog.store import CONFIDENCES as _CONFIDENCES  # noqa: E402
 from treg.domain.catalog.store import EXAMPLE_MAX_BYTES  # noqa: E402
 from treg.domain.catalog.store import _effective_cost, effective_async_descriptor  # noqa: E402
+from treg.application.call.resolve import _ENTITY_UNITS  # noqa: E402
+from treg.domain.asynctasks import json_path  # noqa: E402
 from treg.domain.catalog.routing import paths as _paths  # noqa: E402
 
 SCOPES = {"any_account", "own_account"}
@@ -350,6 +352,65 @@ def check_cost_quantity(cost: dict, input_schema: object, where: str, errors: li
         fail(errors, where, "cost.quantity requires {field: a declared integer body or query field, max: a positive integer, applied?: a JSON path}")
     if cost.get("settle") != "quantity" or cost.get("type") != "per_success" or "reported_charge" in cost:
         fail(errors, where, "cost.quantity requires settle: quantity on a per_success price with no reported_charge")
+
+
+RESERVE_DEFAULT_SOURCES = {"docs", "observed"}
+UNDECLARED_RESERVE = frozenset({
+    "dataforseo.x.on-page-page-screenshot",
+    "findymail.intellimatch.search",
+    "findymail.lookalike.search",
+    "findymail.search.domain",
+    "findymail.search.employees",
+    "seranking.google.keywords.ideas",
+    "seranking.google.keywords.volume",
+    "seranking.web.backlinks.summary",
+    "seranking.web.linking_domains.list",
+    "seranking.web.url.metrics",
+    "serpstat.google.domain.overview",
+    "serpstat.google.domain.ranked_keywords",
+    "serpstat.google.keywords.ideas",
+    "serpstat.google.keywords.volume",
+    "serpstat.web.linking_domains.list",
+})
+
+
+def check_cost_reserve(cost: dict, input_schema: object, where: str, errors: list[str]) -> None:
+    """How a per_result price sizes its hold: by entities the request names, or by rows up to a
+    declared integer field with a sourced default and a maximum."""
+    reserve = cost.get("reserve")
+    if cost.get("type") != "per_result":
+        fail(errors, where, "cost.reserve requires a per_result price")
+    if reserve == {"entities": {}}:
+        return
+    rule = reserve.get("rows") if isinstance(reserve, dict) and set(reserve) == {"rows"} else None
+    if not isinstance(rule, dict):
+        fail(errors, where, "cost.reserve must be {rows: {...}} or {entities: {}}")
+        return
+    param, top, default = rule.get("param"), rule.get("max"), rule.get("default")
+    spec = _input_fields(input_schema).get(param) if isinstance(param, str) else None
+    if (set(rule) != {"param", "default", "max"} or spec is None or spec.get("type") != "integer"
+            or not param.startswith(("body.", "queryParams.")) or type(top) is not int or top < 1
+            or not isinstance(default, dict) or set(default) != {"value", "source"}
+            or type(default["value"]) is not int or not 1 <= default["value"] <= top
+            or default["source"] not in RESERVE_DEFAULT_SOURCES):
+        fail(errors, where, "cost.reserve.rows requires {param: a declared integer body or query "
+                            "field, default: {value: 1..max, source: docs or observed}, max: a positive integer}")
+
+
+def check_cost_settle_count(cost: dict, example: object, where: str, errors: list[str]) -> None:
+    """Rows a per_result price settles by: a list in the response, capped at a rows hold."""
+    settle = cost["settle"]
+    count = settle.get("count") if set(settle) == {"count"} else None
+    if (not isinstance(count, dict) or set(count) != {"path"} or not isinstance(count["path"], str)
+            or not JSON_PATH.fullmatch(count["path"])):
+        fail(errors, where, "cost.settle requires {count: {path: a JSON path}}")
+        return
+    if "rows" not in (cost.get("reserve") or {}):
+        fail(errors, where, "cost.settle.count requires cost.reserve.rows")
+    if (cost.get("per") or 1) != 1:
+        fail(errors, where, "cost.settle.count requires per: 1")
+    if example is not None and not isinstance(json_path(example, count["path"]), list):
+        fail(errors, where, f"cost.settle.count.path '{count['path']}' is not a list in the example_response")
 
 
 TAVILY_RATE_KEYS = {
@@ -926,6 +987,8 @@ def check_cost(cost: dict, where: str, errors: list[str], warnings: list[str],
                                 "fx.yaml credit_rates_usd entry")
         if "settle" in cost or cost.get("type") == "free":
             fail(errors, where, "cost.reported_charge requires a paid price without cost.settle")
+    if "reserve" in cost:
+        check_cost_reserve(cost, input_schema, where, errors)
     if "ceiling_param" in cost:
         check_ceiling_param(cost.get("ceiling_param"), where, errors, prefix="cost.ceiling_param")
     if "call_fee" in cost:
@@ -1002,8 +1065,10 @@ def check_cost(cost: dict, where: str, errors: list[str], warnings: list[str],
         check_cost_table(cost, input_schema, where, errors, provider)
     if not has_table:
         settle = cost.get("settle")
-        if settle is not None and settle not in ("base", "modifiers", "usage", "quantity"):
-            fail(errors, where, "cost.settle currently supports only 'base', 'modifiers', 'usage' or 'quantity'")
+        if settle is not None and settle not in ("base", "modifiers", "usage", "quantity") \
+                and not isinstance(settle, dict):
+            fail(errors, where, "cost.settle currently supports only 'base', 'modifiers', 'usage' or "
+                                "'quantity', or {count: {path}}")
         if settle == "quantity" or "quantity" in cost:
             check_cost_quantity(cost, input_schema, where, errors)
         if settle == "usage":
@@ -1419,6 +1484,15 @@ def main(argv: list[str]) -> int:
                     fail(errors, where, f"cost.type missing or not one of {sorted(COST_TYPES)}")
                 else:
                     check_cost(cost, where, errors, warnings, inp, service)
+                    if isinstance(cost.get("settle"), dict):
+                        ex_file = CATALOG / str(ep.get("example_response") or "")
+                        example = json.loads(ex_file.read_text()) if ep.get("example_response") \
+                            and ex_file.is_file() else None
+                        check_cost_settle_count(cost, example, where, errors)
+                    if (cost.get("type") == "per_result" and cost.get("unit") in _ENTITY_UNITS
+                            and ("reserve" in cost) == (eid in UNDECLARED_RESERVE)):
+                        fail(errors, where, "remove from UNDECLARED_RESERVE" if "reserve" in cost
+                             else "a per_result price in an entity unit needs cost.reserve")
                     if service == "tavily":
                         check_tavily_rates(eid, cost, where, errors)
                     if service == "octen":
@@ -1494,6 +1568,8 @@ def main(argv: list[str]) -> int:
         fail(errors, f"{svc} {method} {path}",
              f"shipped in BOTH tiers — core {tiers['core']} duplicates extended {tiers['extended']}; "
              f"drop the extended copy (core wins) or fix the ingester's core_routes dedup")
+    for eid in sorted(UNDECLARED_RESERVE - endpoint_index.keys() if not only else ()):
+        fail(errors, eid, "in UNDECLARED_RESERVE but not in the catalog")
 
     for e in errors:
         print(e)

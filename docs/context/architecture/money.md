@@ -995,6 +995,11 @@ export really does cost 5,000 keywords. Before this the 20-row default billed a 
 2026-08-12, refunded by hand — and the same number was the catalog's `~$/call` display, so the caller
 saw the wrong price before the call too. On these providers nothing reports a cost after the fact,
 so the reserve IS the charge: a wrong entity count is a wrong bill, not a hold the settle trues up.
+That inference reads the unit name, and a unit name cannot tell "per keyword asked" from "per
+keyword returned": a row billed per returned row in an entity unit held one entity and settled at
+most that. A row that declares `cost.reserve` (architecture/catalog.md) skips the inference and both
+page bounds; its counted settle (`cost.settle.count`) is capped at the hold like every row count, so the
+caller's ceiling and the balance check at reserve still bound the charge.
 
 Fiber natural-language search (`fiber-ai.people.search.natural_language`) adds a fee the page size
 does not name. `_marketplace_pricing` adds two credits, converted with `_usd_to_micro` at the
