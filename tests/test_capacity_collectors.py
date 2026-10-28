@@ -526,6 +526,46 @@ async def test_bounceban_balance_uses_raw_authorization_header(monkeypatch, bala
         collectors.get_settings.cache_clear()
 
 
+@pytest.mark.parametrize("balance", [0, 4045])
+async def test_dropcontact_balance_uses_free_empty_submission(monkeypatch, balance):
+    monkeypatch.setenv("TREG_PLATFORM_KEY_DROPCONTACT", "private-test-key")
+    collectors.get_settings.cache_clear()
+
+    def reply(request):
+        assert request.method == "POST"
+        assert request.url == "https://api.dropcontact.com/v1/enrich/all"
+        assert request.headers["x-access-token"] == "private-test-key"
+        assert request.content == b'{"data":[{}]}'
+        return httpx.Response(200, json={"credits_left": balance})
+
+    try:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(reply)) as client:
+            row = await collectors.provider_balance("dropcontact", client)
+        assert row == {"provider": "dropcontact", "value": balance, "unit": "credits", "note": ""}
+    finally:
+        collectors.get_settings.cache_clear()
+
+
+@pytest.mark.parametrize("balance", [None, -1, True, "4045", float("inf")])
+async def test_dropcontact_balance_rejects_uncertain_values(monkeypatch, balance):
+    monkeypatch.setenv("TREG_PLATFORM_KEY_DROPCONTACT", "private-test-key")
+    collectors.get_settings.cache_clear()
+
+    def reply(_request):
+        if balance == float("inf"):
+            return httpx.Response(200, content=b'{"credits_left": Infinity}')
+        return httpx.Response(200, json={"credits_left": balance})
+
+    try:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(reply)) as client:
+            row = await collectors.provider_balance("dropcontact", client)
+        assert row["value"] is None
+        assert "no valid credit balance" in row["note"]
+        assert "private-test-key" not in str(row)
+    finally:
+        collectors.get_settings.cache_clear()
+
+
 @pytest.mark.parametrize("balance", [None, -1, True, "9997", float("inf")])
 async def test_bounceban_balance_rejects_uncertain_values_without_exposing_key(monkeypatch, balance):
     def probe(_request):

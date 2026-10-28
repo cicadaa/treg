@@ -3728,6 +3728,32 @@ def test_octen_runtime_uses_frozen_rates_and_checks_platform_shape():
     assert caught.value.kind == "catalog_parameter_invalid"
 
 
+def test_strict_query_accepts_only_declared_path_parameters():
+    ep = {"id": "sample.jobs.get", "strict_query": True,
+          "input": {"pathParams": {"request_id": {"type": "string", "required": True}}}}
+    call_resolution._enforce_catalog_query(
+        ep, call_resolution.QueryValues((("request_id", "job-1"),)), False)
+    for items in ((("request_id", "job-1"), ("forceResults", "true")),
+                  (("request_id", "job-1"), ("request_id", "job-2"))):
+        with pytest.raises(ResolutionFailed) as caught:
+            call_resolution._enforce_catalog_query(ep, call_resolution.QueryValues(items), False)
+        assert caught.value.kind == "catalog_parameter_invalid"
+
+
+def test_body_allowlist_requires_declared_fields_within_each_object():
+    ep = {"id": "sample.people.find", "body_allowlist": True,
+          "input": {"body": {"data": {"type": "array[object]", "required": True,
+                                      "minItems": 1, "maxItems": 1,
+                                      "item_required_any": ["full_name", "linkedin"],
+                                      "item_required_all": ["company"]}}}}
+    call_resolution._enforce_catalog_body(ep, b'{"data":[{"full_name":"A B","company":"Acme"}]}')
+    for body in (b'{"data":[{"company":"Acme"}]}',
+                 b'{"data":[{"full_name":"A B"}]}'):
+        with pytest.raises(ResolutionFailed) as caught:
+            call_resolution._enforce_catalog_body(ep, body)
+        assert caught.value.kind == "catalog_parameter_invalid"
+
+
 async def test_an_answer_over_the_size_limit_is_not_kept_and_a_retry_never_runs_again(
         clients: AsyncClient, platform_on, monkeypatch):
     """Finding 5 (2026-09-21): retry rows kept every body whole for 24 h, up to 7.9 MB, while the

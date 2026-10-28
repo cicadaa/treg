@@ -583,6 +583,20 @@ async def _bounceban(c, key):
     return {"value": credits, "unit": "verification credits", "note": ""}
 
 
+async def _dropcontact(c, key):
+    response = await c.post(
+        "https://api.dropcontact.com/v1/enrich/all",
+        headers={"X-Access-Token": key}, json={"data": [{}]},
+    )
+    response.raise_for_status()
+    data = response.json()
+    credits = data.get("credits_left") if isinstance(data, dict) and not data.get("error") else None
+    if (isinstance(credits, bool) or not isinstance(credits, (int, float))
+            or not math.isfinite(credits) or credits < 0):
+        raise ValueError("Dropcontact returned no valid credit balance")
+    return {"value": credits, "unit": "credits", "note": ""}
+
+
 async def _zerobounce(c, key):
     # Free balance route. ZeroBounce returns the balance as either a JSON number or a decimal
     # string. A bad key can still answer HTTP 200 with the documented -1 sentinel.
@@ -1004,6 +1018,7 @@ async def _piapi(c, key):
 
 
 BALANCE_ROUTES = {
+    "dropcontact": _dropcontact,
     "theirstack": _theirstack,
     "anyapi": _anyapi,
     "cloro": _cloro,
