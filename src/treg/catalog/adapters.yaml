@@ -31,6 +31,13 @@ adapters:
          domain: body.domain, linkedin_url: body.linkedin_url}
     out: {email: valid_email, verified: "email_status == 'valid'"}
     miss: "valid_email == null"
+  enrow.people.email.find:
+    accepts: [[full_name, domain], [first_name, last_name, domain], [linkedin_url]]
+    in: {full_name: body.fullname, domain: body.company_domain, linkedin_url: body.linkedin_url}
+    in_expr: {body.fullname: "join(first_name, last_name)"}
+    out: {email: email, first_name: info.firstname, last_name: info.lastname,
+          verified: "qualification == 'valid'"}
+    miss: "email == null"
   contactout.people.contact.work:
     accepts: [[linkedin_url]]
     in: {linkedin_url: queryParams.profile}
@@ -378,6 +385,12 @@ adapters:
     miss: "data.creator_info.unique_id == null"
 
   # ---- people.phone.find --------------------------------------------------------------------
+  enrow.people.phone.find:
+    accepts: [[linkedin_url], [first_name, last_name, domain]]
+    in: {linkedin_url: body.linkedin_url, first_name: body.firstname,
+         last_name: body.lastname, domain: body.company_domain}
+    out: {phone: number, country_code: country}
+    miss: "number == null"
   contactout.people.contact.phone:
     accepts: [[linkedin_url]]
     in: {linkedin_url: queryParams.profile}
@@ -498,6 +511,11 @@ adapters:
     miss: "status == null"
     verdict: "choose(is_domain_catch_all == true, choose(status == 'risky', 'catch_all', status), status)"
     verdicts: {safe: valid}
+  enrow.people.email.verify:
+    accepts: [[email]]
+    in: {email: body.email}
+    out: {valid: "qualification == 'valid'", status: qualification}
+    miss: "qualification == null"
   anymailfinder.people.email.verify:
     accepts: [[email]]
     in: {email: body.email}
