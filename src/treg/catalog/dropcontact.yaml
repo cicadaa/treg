@@ -18,14 +18,14 @@ endpoints:
     method: POST
     path: /v1/enrich/all
     name: Find a verified work email
-    summary: Find one person's work email from their name and company context.
+    summary: Generate and verify a work email from a person's name and company; Dropcontact says it uses no contact database.
     async: &single_async
       id_from: request_id
       poll: {endpoint: dropcontact.jobs.get, param: {in: pathParams, name: request_id}}
       status: {path: success, progress: [false], success: [true], failure: []}
       result: {path: data}
       interval: 30
-      max_age: 86400
+      max_age: 1800
     body_allowlist: true
     input:
       bodyType: json
@@ -33,7 +33,8 @@ endpoints:
         data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_any: [first_name, last_name, full_name], note: 'One person with first_name + last_name or full_name, plus company, website, or company_linkedin.'}
         language: {type: string, required: false, enum: [en, fr]}
         siren: {type: boolean, required: false}
-      note: A verified email is one credit; a no-email result is refunded. Poll dropcontact.jobs.get with the returned request_id.
+      note: Needs a name and company name, domain, or website; this is not a people search. Dropcontact says its real-time process uses no contact database and was audited by France's CNIL (https://www.dropcontact.com/help/gdpr-compliance); consider it for EU and privacy-sensitive B2B work. A found verified email costs one credit, and no-email results are refunded. Poll dropcontact.jobs.get with the request_id.
+    test_request: {body: {data: [{first_name: Peter, last_name: Jackson, website: company.com}]}}
     cost: &single_find_cost
       type: per_success
       value: 1
@@ -48,6 +49,7 @@ endpoints:
       confidence: verified
       note: A one-record submission holds one credit; a terminal row without email releases it.
     docs_url: https://developer.dropcontact.com/#enrich-endpoint
+    terminal_example_response: examples/dropcontact.people.email.find.result.json
     untestable: A repeatable positive example would publish a person's contact identity.
     cache: forbidden
 
@@ -60,7 +62,7 @@ endpoints:
     method: POST
     path: /v1/enrich/all
     name: Find a work email from LinkedIn
-    summary: Find one verified work email from a person's public LinkedIn URL.
+    summary: Generate and verify a work email from a public LinkedIn profile URL without a LinkedIn login.
     async: *single_async
     body_allowlist: true
     input:
@@ -68,9 +70,11 @@ endpoints:
       body:
         data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_all: [linkedin], note: 'One object containing a public person-profile URL in linkedin.'}
         language: {type: string, required: false, enum: [en, fr]}
-      note: A valid LinkedIn profile can find a contact without a company field; Sales Navigator URLs are not documented.
+      note: A valid LinkedIn profile can find a contact without a company field; Sales Navigator URLs are not documented. Dropcontact says it does not use a stored contact database (https://www.dropcontact.com/help/gdpr-compliance).
+    test_request: {body: {data: [{linkedin: 'https://www.linkedin.com/in/example'}]}}
     cost: *single_find_cost
     docs_url: https://developer.dropcontact.com/#request-fields
+    terminal_example_response: examples/dropcontact.people.email.find.result.json
     untestable: A repeatable positive example would publish a person's contact identity.
     cache: forbidden
 
@@ -82,8 +86,8 @@ endpoints:
     scope: any_account
     method: POST
     path: /v1/enrich/all
-    name: Verify a business email
-    summary: Qualify an email address you already have, including catch-all and professional-domain status.
+    name: Verify and qualify an email
+    summary: Verify an existing email with Dropcontact's in-house checks and qualify it as nominative, catch-all, generic, personal, or invalid.
     async: *single_async
     body_allowlist: true
     input:
@@ -91,7 +95,7 @@ endpoints:
       body:
         data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_all: [email], note: 'One object containing an email field.'}
         language: {type: string, required: false, enum: [en, fr]}
-      note: Dropcontact charges one credit for a supplied email even when its qualification is invalid.
+      note: Dropcontact claims 99% validity for nominative work emails and says its catch-all checks may disagree with other verifiers (https://www.dropcontact.com/help/types-of-email-addresses). It may identify or correct a wrong address; inspect the returned email and qualification. An invalid result can have an empty email and an invalide@pro qualification. A supplied email costs one credit even when invalid.
     test_request: {body: {data: [{email: support@dropcontact.com}]}}
     cost:
       type: per_call
@@ -119,7 +123,7 @@ endpoints:
     method: POST
     path: /v1/enrich/all
     name: Enrich a contact and company
-    summary: Enrich one contact with verified email, cleaned job, LinkedIn, and company data.
+    summary: Enrich a B2B contact with a verified work email, cleaned job, LinkedIn, and company data using Dropcontact's real-time process.
     async: *single_async
     body_allowlist: true
     input:
@@ -128,7 +132,7 @@ endpoints:
         data: {type: 'array[object]', required: true, minItems: 1, maxItems: 1, item_required_any: [first_name, last_name, full_name, linkedin, email], note: 'One person with a documented contact and company identifier, or a LinkedIn profile URL.'}
         language: {type: string, required: false, enum: [en, fr]}
         siren: {type: boolean, required: false}
-      note: Growth may return job, job_level, job_function, industry, employee_count, website, and legal fields; fields depend on the input and match.
+      note: Growth may return job, job_level, job_function, industry, employee_count, website, and legal fields; fields depend on the input and match. Supplied emails are verified; Dropcontact may correct an invalid one. Dropcontact says it uses no stored contact database and was audited by France's CNIL (https://www.dropcontact.com/help/gdpr-compliance).
     cost: *single_find_cost
     docs_url: https://developer.dropcontact.com/#response-fields
     untestable: A repeatable positive example would publish a person's contact identity.
