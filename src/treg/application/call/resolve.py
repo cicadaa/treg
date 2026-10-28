@@ -1337,12 +1337,13 @@ def _document_value(document: object, dotted: str) -> object:
 def _enforce_catalog_query(ep: dict, query: QueryValues, has_body: bool) -> None:
     """Opt-in catalog contract on every credential tier; raw own-tool relays are unaffected.
 
-    A strict GET tool accepts only its declared query fields, once each. No request is rewritten,
+    A strict GET tool accepts only its declared query and path fields, once each. No request is rewritten,
     and invalid values are never echoed (they may be accidentally supplied session credentials).
     """
     if not ep.get("strict_query"):
         return
-    fields = (ep.get("input") or {}).get("queryParams") or {}
+    inputs = ep.get("input") or {}
+    fields = (inputs.get("queryParams") or {}) | (inputs.get("pathParams") or {})
     values: dict[str, str] = {}
     invalid = has_body
     for name, value in query.multi_items():
@@ -1453,6 +1454,22 @@ def _enforce_catalog_body(ep: dict, body: bytes) -> None:
                     "message": f"{ep['id']} requires {expected} item in body.{name}",
                 },
             )
+        if ep.get("body_allowlist") and isinstance(value, list):
+            required_all = spec.get("item_required_all") or []
+            required_any = spec.get("item_required_any") or []
+            for index, item in enumerate(value):
+                if not (required_all or required_any):
+                    break
+                present = ({field for field, field_value in item.items()
+                            if field_value not in (None, "", [])} if isinstance(item, dict) else set())
+                if not set(required_all) <= present or (required_any and not set(required_any) & present):
+                    raise ResolutionFailed(
+                        "catalog_parameter_invalid", status_code=400, detail={
+                            "error": "catalog_parameter_invalid", "endpoint_id": ep["id"],
+                            "parameter": f"body.{name}.{index}",
+                            "message": f"{ep['id']} requires the declared contact fields in body.{name}.{index}",
+                        },
+                    )
 
 
 def _request_headers(headers) -> dict[str, str]:
@@ -1614,6 +1631,33 @@ def _enforce_platform_request(ep: dict, body: bytes, headers=None, query=None) -
     has a singleton enum is the row identity, not caller choice: accepting another value lets a cheap
     row reserve for an expensive model. Full schema validation remains out of the faithful BYOK path.
     """
+    if ep.get("provider") == "theirstack":
+        endpoint_id = ep["id"]
+        if endpoint_id in {"theirstack.jobs.search", "theirstack.companies.search"}:
+            document = _request_body_document(ep, body, headers)
+            limit = document.get("limit")
+            if type(limit) is not int or not 1 <= limit <= _PLATFORM_PAGE_MAX \
+                    or document.get("blur_company_data") is True:
+                raise ResolutionFailed(
+                    "catalog_parameter_invalid", status_code=400, detail={
+                        "error": "catalog_parameter_invalid", "endpoint_id": endpoint_id,
+                        "parameter": "body.limit",
+                        "message": "TheirStack shared-key search requires an explicit limit from 1 to 100 and ordinary, unblurred results.",
+                    },
+                )
+        elif endpoint_id in {"theirstack.companies.technologies", "theirstack.companies.buying_intents"}:
+            document = _request_body_document(ep, body, headers)
+            identifiers = ("company_name", "company_domain", "company_linkedin_url")
+            if (sum(bool(document.get(name)) for name in identifiers) != 1
+                    or document.get("company_name_or") or document.get("company_id")):
+                raise ResolutionFailed(
+                    "catalog_parameter_invalid", status_code=400, detail={
+                        "error": "catalog_parameter_invalid", "endpoint_id": endpoint_id,
+                        "parameter": "body",
+                        "message": "TheirStack shared-key lookup requires exactly one singular company identifier.",
+                    },
+                )
+
     if ep.get("provider") == "oceanio":
         endpoint_id = ep["id"]
         if endpoint_id in {

@@ -531,6 +531,16 @@ def _observed_cost_micro(mk: MarketplaceCall, body: bytes, headers=None) -> int 
         doc = json.loads(body)
     except (ValueError, UnicodeDecodeError):
         return 0 if provider == "contactout" else None
+    if provider == "theirstack" and mk.endpoint_id in {
+        "theirstack.jobs.search", "theirstack.companies.search",
+        "theirstack.companies.technologies", "theirstack.companies.buying_intents",
+    }:
+        rows = doc.get("data") if isinstance(doc, dict) else None
+        if not isinstance(rows, list):
+            return None
+        if mk.endpoint_id in {"theirstack.jobs.search", "theirstack.companies.search"}:
+            return _rows_billed_micro(mk, ep, len(rows))
+        return mk.estimate_micro if rows else 0
     if (provider == "valyu" and mk.endpoint_id.endswith(".search")
             and isinstance(doc, dict)
             and ("results" not in doc or doc["results"] == [])
@@ -709,9 +719,8 @@ def _observed_cost_micro(mk: MarketplaceCall, body: bytes, headers=None) -> int 
         n = len(data) if isinstance(data, list) else (1 if data else 0)
         return n * mk.unit_micro
     if provider == "influencersclub" and mk.cost_type == "per_result" and mk.unit_micro > 0:
-        # Discovery bills per creator RETURNED (cost.value credits each, e.g. 0.01 for search/similar,
-        # 0.03 for search with return_filter_values=true). The `accounts` array is invisible to the
-        # generic counters. An envelope without `accounts` (an error shape) costs nothing.
+        # Discovery bills per creator RETURNED. The `accounts` array is invisible to the generic
+        # counters. An envelope without `accounts` (an error shape) costs nothing.
         rows = doc.get("accounts")
         row_count = sum(item is not None for item in rows) if isinstance(rows, list) else 0
         return _rows_billed_micro(mk, ep, row_count)

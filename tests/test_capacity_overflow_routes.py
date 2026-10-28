@@ -349,6 +349,7 @@ def test_an_unrecorded_vendor_phrase_is_a_tripwire_never_a_mark():
 # Platform providers whose out-of-credit answer nobody has recorded in `_TABLE` yet. An acknowledged
 # gap, not a claim the vendor never runs dry: their 4xx trips `unrecorded` instead.
 _UNRECORDED_SIGNATURE = {
+    "dropcontact",  # Growth credits remain; no empty-balance error body was forced
     "adyntel",  # no balance endpoint; documented 402 does not uniquely prove wallet exhaustion
     "apify", "aviato", "branddev", "brightdata", "coingecko", "coresignal", "crustdata", "dataforseo",
     "diffbot", "exa", "fiber-ai", "finnhub", "justoneapi", "marketstack",
@@ -392,6 +393,7 @@ _UNRECORDED_SIGNATURE = {
     "sixtyfour",  # credits remain; documented 402 insufficient credit was not forced
     "blitzapi",  # monthly records remain; an exhausted-key response was not forced
     "enrichlayer",  # PAYG auto top-up remains funded; the docs name 403 but not its response body
+    "theirstack",  # funded API credits remain; the documented 402 body was not observed
 
     "serpapi", "serpstat", "spyfu", "tiingo", "tikhub", "twelvedata",
 }

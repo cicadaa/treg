@@ -17,6 +17,64 @@ from treg.domain.capacity import collectors, policy, signatures, sweep
 from treg.timeutil import utcnow_naive
 
 
+async def test_anymailfinder_balance_uses_free_account_route():
+    def probe(request):
+        assert request.method == "GET"
+        assert str(request.url) == "https://api.anymailfinder.com/v5.1/account"
+        assert request.headers["authorization"] == "test-key"
+        return httpx.Response(200, json={"credits_left": 100, "email": "account@example.com"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(probe)) as client:
+        row = await collectors._anymailfinder(client, "test-key")
+    assert row == {"value": 100, "unit": "credits", "note": ""}
+    assert policy.default_policy("anymailfinder", has_key=True).capacity_type == "credits"
+    assert signatures.classify("anymailfinder", 402, {},
+                               b'{"error":"upgrade_needed","message":"You do not have enough credits."}').kind == "balance"
+
+
+@pytest.mark.parametrize("credits", [None, True, -1, "12"])
+async def test_anymailfinder_balance_rejects_invalid_values(credits):
+    async with httpx.AsyncClient(transport=httpx.MockTransport(
+            lambda _: httpx.Response(200, json={"credits_left": credits}))) as client:
+        with pytest.raises(ValueError, match="invalid credit balance"):
+            await collectors._anymailfinder(client, "test-key")
+
+
+async def test_theirstack_balance_subtracts_used_api_credits():
+    def probe(request):
+        assert request.method == "GET"
+        assert str(request.url) == "https://api.theirstack.com/v0/billing/credit-balance"
+        assert request.headers["authorization"] == "Bearer test-key"
+        return httpx.Response(200, json={"api_credits": 5200, "used_api_credits": 10})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(probe)) as client:
+        row = await collectors._theirstack(client, "test-key")
+    assert row["value"] == 5190 and row["unit"] == "API credits"
+    assert policy.default_policy("theirstack", has_key=True).rate_limit["limit"] == 4
+
+
+@pytest.mark.parametrize("field,value", [
+    ("api_credits", None), ("api_credits", True), ("api_credits", "5200"),
+    ("api_credits", -1), ("api_credits", 10.5),
+    ("used_api_credits", None), ("used_api_credits", True),
+    ("used_api_credits", "10"), ("used_api_credits", -1), ("used_api_credits", 1.5),
+])
+async def test_theirstack_balance_rejects_invalid_values(field, value):
+    body = {"api_credits": 5200, "used_api_credits": 10}
+    body[field] = value
+    async with httpx.AsyncClient(transport=httpx.MockTransport(
+            lambda _: httpx.Response(200, json=body))) as client:
+        with pytest.raises(ValueError, match="no valid API credit balance"):
+            await collectors._theirstack(client, "test-key")
+
+
+async def test_theirstack_balance_is_zero_when_usage_exceeds_allocation():
+    async with httpx.AsyncClient(transport=httpx.MockTransport(
+            lambda _: httpx.Response(200, json={"api_credits": 100, "used_api_credits": 101}))) as client:
+        row = await collectors._theirstack(client, "test-key")
+    assert row["value"] == 0
+
+
 async def test_blitzapi_key_info_supplies_exact_monthly_balance():
     def probe(request):
         assert request.method == "GET"
@@ -464,6 +522,46 @@ async def test_bounceban_balance_uses_raw_authorization_header(monkeypatch, bala
             row = await collectors.provider_balance("bounceban", client)
         assert row == {"provider": "bounceban", "value": balance,
                        "unit": "verification credits", "note": ""}
+    finally:
+        collectors.get_settings.cache_clear()
+
+
+@pytest.mark.parametrize("balance", [0, 4045])
+async def test_dropcontact_balance_uses_free_empty_submission(monkeypatch, balance):
+    monkeypatch.setenv("TREG_PLATFORM_KEY_DROPCONTACT", "private-test-key")
+    collectors.get_settings.cache_clear()
+
+    def reply(request):
+        assert request.method == "POST"
+        assert request.url == "https://api.dropcontact.com/v1/enrich/all"
+        assert request.headers["x-access-token"] == "private-test-key"
+        assert request.content == b'{"data":[{}]}'
+        return httpx.Response(200, json={"credits_left": balance})
+
+    try:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(reply)) as client:
+            row = await collectors.provider_balance("dropcontact", client)
+        assert row == {"provider": "dropcontact", "value": balance, "unit": "credits", "note": ""}
+    finally:
+        collectors.get_settings.cache_clear()
+
+
+@pytest.mark.parametrize("balance", [None, -1, True, "4045", float("inf")])
+async def test_dropcontact_balance_rejects_uncertain_values(monkeypatch, balance):
+    monkeypatch.setenv("TREG_PLATFORM_KEY_DROPCONTACT", "private-test-key")
+    collectors.get_settings.cache_clear()
+
+    def reply(_request):
+        if balance == float("inf"):
+            return httpx.Response(200, content=b'{"credits_left": Infinity}')
+        return httpx.Response(200, json={"credits_left": balance})
+
+    try:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(reply)) as client:
+            row = await collectors.provider_balance("dropcontact", client)
+        assert row["value"] is None
+        assert "no valid credit balance" in row["note"]
+        assert "private-test-key" not in str(row)
     finally:
         collectors.get_settings.cache_clear()
 

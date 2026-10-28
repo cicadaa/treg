@@ -9,6 +9,21 @@ sources:
   - scripts/catalog_backfill_added.py
   - .github/workflows/catalog-added.yml
   - src/treg/catalog/fetchinio.yaml
+  - src/treg/catalog/theirstack.yaml
+  - src/treg/web/logos/theirstack.svg
+  - src/treg/catalog/examples/theirstack.jobs.search.json
+  - src/treg/catalog/examples/theirstack.companies.search.json
+  - src/treg/catalog/examples/theirstack.companies.technologies.json
+  - src/treg/catalog/examples/theirstack.companies.buying_intents.json
+  - src/treg/catalog/examples/theirstack.catalog.keywords.json
+  - src/treg/catalog/examples/theirstack.catalog.keyword_categories.json
+  - src/treg/catalog/examples/theirstack.catalog.keyword_subcategories.json
+  - src/treg/catalog/examples/theirstack.catalog.industries.json
+  - src/treg/catalog/examples/theirstack.catalog.locations.json
+  - src/treg/catalog/examples/theirstack.catalog.job_countries.json
+  - src/treg/catalog/examples/theirstack.catalog.company_countries.json
+  - src/treg/catalog/examples/theirstack.account.balance.json
+  - src/treg/catalog/examples/theirstack.account.credits_consumption.json
   - src/treg/web/logos/fetchinio.svg
   - src/treg/catalog/examples/fetchinio.linkedin.user.profile.json
   - src/treg/catalog/examples/fetchinio.linkedin.company.profile.json
@@ -1158,6 +1173,13 @@ that row is left out of the advertised per-second rate span. The money fragment 
 `source_url` + `checked` + `confidence` answer *says who, and how sure*. All four questions have to
 have an answer before treg will spend its OWN money on an endpoint (see "platform-eligible" below),
 which is the whole reason the provenance keys exist.
+
+An asynchronous single-record `per_success` row whose provider reports no per-job charge may use
+`settle: terminal_presence` with `presence: {row: data.0, field: email}`. The fixed price is held
+through completion; a terminal row with an absent or empty field settles zero, and a nonempty
+field settles the held price. A missing or malformed row settles the reserve for review rather than
+assuming a free call. Validation requires `body_allowlist` and a required input array with exactly
+one item, so a shared key cannot buy several results under one hold.
 
 **`per` and `unit`.** Read a block as "`value` `currency` per `per` `unit`". SpyFu bills a CPM, so
 `value: 2.00, per: 1000, unit: row` — and `cost_view` divides, serving `usd: 0.002` per row. Hunter

@@ -12,7 +12,7 @@ pricing_url: https://jobs.arihaan.ai/pay-per-job
 endpoints:
   - id: mobiusengine-jobs.jobs.search
     verified: '2026-10-27'
-    added: '2026-10-27'
+    added: '2026-10-28'
     example_response: examples/mobiusengine-jobs.jobs.search.json
     domain: jobs
     capability: companies.jobs.search
@@ -50,7 +50,7 @@ endpoints:
 
   - id: mobiusengine-jobs.jobs.search.post
     verified: '2026-10-27'
-    added: '2026-10-27'
+    added: '2026-10-28'
     example_response: examples/mobiusengine-jobs.jobs.search.post.json
     domain: jobs
     capability: companies.jobs.search
@@ -88,7 +88,7 @@ endpoints:
 
   - id: mobiusengine-jobs.jobs.search.full
     verified: '2026-10-27'
-    added: '2026-10-27'
+    added: '2026-10-28'
     example_response: examples/mobiusengine-jobs.jobs.search.full.json
     domain: jobs
     capability: companies.jobs.search
@@ -124,7 +124,7 @@ endpoints:
 
   - id: mobiusengine-jobs.jobs.search.full.post
     verified: '2026-10-27'
-    added: '2026-10-27'
+    added: '2026-10-28'
     example_response: examples/mobiusengine-jobs.jobs.search.full.post.json
     domain: jobs
     capability: companies.jobs.search
@@ -160,7 +160,7 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.jobs.get
-    added: '2026-10-27'
+    added: '2026-10-28'
     domain: jobs
     capability: companies.jobs.detail
     platform: companies
@@ -191,7 +191,7 @@ endpoints:
     docs_url: https://jobs.arihaan.ai/docs
 
   - id: mobiusengine-jobs.jobs.batch
-    added: '2026-10-27'
+    added: '2026-10-28'
     domain: jobs
     capability: companies.jobs.detail
     platform: companies
@@ -220,7 +220,7 @@ endpoints:
 
   - id: mobiusengine-jobs.jobs.count
     verified: '2026-10-27'
-    added: '2026-10-27'
+    added: '2026-10-28'
     example_response: examples/mobiusengine-jobs.jobs.count.json
     domain: jobs
     capability: companies.jobs.search.count
@@ -254,7 +254,7 @@ endpoints:
 
   - id: mobiusengine-jobs.jobs.count.post
     verified: '2026-10-27'
-    added: '2026-10-27'
+    added: '2026-10-28'
     example_response: examples/mobiusengine-jobs.jobs.count.post.json
     domain: jobs
     capability: companies.jobs.search.count
@@ -287,7 +287,7 @@ endpoints:
 
   - id: mobiusengine-jobs.account.balance
     verified: '2026-10-27'
-    added: '2026-10-27'
+    added: '2026-10-28'
     example_response: examples/mobiusengine-jobs.account.balance.json
     kind: account
     capability: account.usage

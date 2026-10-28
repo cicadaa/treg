@@ -494,7 +494,7 @@ Pending `AsyncTaskRecord` holds are excluded from this short request reaper. The
 ## Deferred asynchronous settlement
 
 `domain/money/settlement.py` is the single data-derived calculation seam. Reserve time freezes a basis
-with `when: response|terminal` and `amount.kind: table|usage|observed`; `settle(basis, evidence)` returns
+with `when: response|terminal` and `amount.kind: table|usage|observed|terminal_presence`; `settle(basis, evidence)` returns
 raw integer micro-USD and never writes the ledger. `table_amount_micro` bounds a `times` multiplier by
 the field's declared `min`/`max` (finite and always positive, whatever minimum is declared): an out-of-range value
 matches no row and prices at the fallback, so a caller can neither reserve zero nor bill past the
@@ -506,7 +506,12 @@ finished answer is charged for each one, a finished answer with no result includ
 that bills on submission has the reported charge frozen into the basis
 (`submission_charge_micro`), and an `observed` settle uses it when the terminal answer reports
 none, `billed_failure` included: the task bills what the provider charged, not the estimate. Async
-`per_success` rows without a table keep settling on the submission response.
+`per_success` rows without a table keep settling on the submission response unless they declare
+`settle: terminal_presence`. That bounded one-item mode freezes a result row and field path, holds
+one result's price, and settles zero when the terminal row has no value or an empty value. An
+optional `presence.request_field` marks a supplied billable input at submission, so it settles the
+hold even when the terminal result omits that field. A missing
+or malformed terminal row settles the reserve; a confirmed terminal failure releases the hold.
 
 A submission whose own status is already a success word, on a descriptor with
 `terminal_on_submission`, is not deferred: it settles on the response through the ordinary path.
@@ -1123,7 +1128,7 @@ still pay the provider twice.
   `X-Treg-Original-Cost-Micro`; MCP returns `replayed: true`. An async submission replay echoes its
   original reservation there.
 - Refusal and cancellation cleanup return an acquired label. Expired entries are swept lazily,
-  scoped to the caller, at claim time.
+  scoped to the caller, at claim time, skipping rows a concurrent request has locked.
 
 A reserve admission 429 never reaches `_store_idempotent`; the HTTP exception handler's
 `_stamp_call_exit` releases its pending claim, including calls from either MCP surface. The same
