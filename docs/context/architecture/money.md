@@ -634,10 +634,7 @@ it. The one exception is the off-session auto-top-up charge, where the server it
 PaymentIntent's confirmed status - nothing attacker-supplied is involved - so it credits immediately
 and the webhook redelivery lands as a no-op.
 
-The webhook lives at `POST /billing/stripe/webhook`, **deliberately separate from the landing demo's
-`/stripe/webhook`** and signed by a different secret: they are different Stripe accounts' events with
-different consequences, and sharing a path would let one secret authorize the other's effects. It
-**404s when unconfigured**, so a deploy without the secret exposes no unauthenticated POST surface.
+The webhook lives at `POST /billing/stripe/webhook`. It **404s when unconfigured**, so a deploy without the secret exposes no unauthenticated POST surface.
 `verify_event` uses the SDK's `verify_header` (timestamp tolerance = replay protection, and it handles
 the several-signatures case during rotation) rather than `construct_event`, so a genuine event of a
 type this SDK version predates is accepted and then ignored, not rejected as forged. A handler failure
