@@ -141,6 +141,20 @@ adapters:
     out: {email: data.email, first_name: "split_first(data.name)",
           last_name: "split_last(data.name)", verified: "data.email_status == 'valid'"}
     miss: "data.email == null"
+  dropcontact.people.email.find:
+    accepts: [[full_name, domain], [first_name, last_name, domain]]
+    test_identity: {first_name: Peter, last_name: Jackson, domain: company.com}
+    in_expr: {body.data: "list(obj('first_name', first_name, 'last_name', last_name, 'website', domain))"}
+    out: {email: "coalesce(data[0].email[0].email, null)", first_name: "data[0].first_name",
+          last_name: "data[0].last_name", verified: "coalesce(data[0].email[0].email, null) != null"}
+    miss: "coalesce(data[0].email[0].email, null) == null"
+  dropcontact.people.email.find.linkedin:
+    accepts: [[linkedin_url]]
+    test_identity: {linkedin_url: "https://www.linkedin.com/in/example"}
+    in_expr: {body.data: "list(obj('linkedin', linkedin_url))"}
+    out: {email: "coalesce(data[0].email[0].email, null)", first_name: "data[0].first_name",
+          last_name: "data[0].last_name", verified: "coalesce(data[0].email[0].email, null) != null"}
+    miss: "coalesce(data[0].email[0].email, null) == null"
   sixtyfour.people.email.find.work:
     accepts: [[full_name, domain], [first_name, last_name, domain], [linkedin_url]]
     in: {full_name: body.lead.name, domain: body.lead.domain, linkedin_url: body.lead.linkedin_url}
@@ -473,6 +487,18 @@ adapters:
     in: {email: body.email}
     out: {valid: "email_status == 'valid'", status: email_status}
     miss: "email_status == null"
+  dropcontact.people.email.verify:
+    accepts: [[email]]
+    test_identity: {email: support@dropcontact.com}
+    in_expr: {body.data: "list(obj('email', email))"}
+    out: {valid: "choose(starts_with(data[0].email[0].qualification, 'nominat'), true, starts_with(data[0].email[0].qualification, 'gener'))",
+          status: "coalesce(data[0].email[0].qualification, 'unknown')"}
+    miss: "success == false"
+    verdicts: {"nominative@pro": valid, "generic@pro": valid, "catch_all@pro": catch_all,
+               "invalid@pro": invalid, "invalid@invalid": invalid, "invalide@pro": invalid,
+               "invalide@perso": invalid, "invalide@invalid": invalid, "nominative@perso": valid,
+               "nominatif@pro": valid, "nominatif@perso": valid, "generique@pro": valid,
+               "generique@perso": valid}
   dropleads.people.email.verify:
     accepts: [[email]]
     in: {email: body.email}
