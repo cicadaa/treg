@@ -1334,6 +1334,33 @@ HUNTER = OAuthProvider(
     probe_path="/account",  # free — consumes no search/verification/enrichment credits
 )
 
+MOBIUSENGINE_JOBS = OAuthProvider(
+    service="mobiusengine-jobs",
+    display_name="MobiusEngine Jobs Data",
+    auth_kind="key",
+    token_label="API key",
+    token_placeholder="your MobiusEngine Jobs Data API key",
+    # The key rides in x-api-key (Authorization: Bearer is accepted too); the header keeps it out of logged URLs.
+    token_header="x-api-key",
+    token_format="{secret}",
+    setup_url="https://jobs.arihaan.ai/pay-per-job",
+    setup_action_label="Get your MobiusEngine Jobs Data API key",
+    setup_steps=(
+        "Open the pay-per-job page and sign in with Google. New accounts start with a $1 credit.",
+        "Copy the API key shown on your first sign-in (it is shown once; more can be made under API keys).",
+        "Add funds under Pay per job when the credit is used: calls are charged per job from that balance.",
+    ),
+    setup_note="Billed per job from a prepaid balance. The balance, usage, meta and rates routes are free.",
+    auth_uri="", token_uri="",
+    scopes={},
+    client_id_setting="", client_secret_setting="",
+    category="Jobs data",
+    summary="Search and fetch live job postings from employers' own career sites, with or without the full description.",
+    base_url="https://jobs-api.arihaan.ai",
+    docs_url="https://jobs.arihaan.ai/docs",
+    probe_path="/v1/balance",  # free; a bad or missing key gets HTTP 401 {"error": {"code": "unauthorized", ...}}
+)
+
 ANYAPI = OAuthProvider(
     service="anyapi",
     display_name="AnyAPI",
@@ -3401,6 +3428,25 @@ ANYMAILFINDER = OAuthProvider(
 )
 
 
+DROPCONTACT = OAuthProvider(
+    service="dropcontact", display_name="Dropcontact", auth_kind="key",
+    token_label="API key", token_placeholder="your Dropcontact API key",
+    token_header="X-Access-Token", token_format="{secret}",
+    setup_url="https://app.dropcontact.com/",
+    setup_action_label="Get your Dropcontact API key",
+    setup_steps=("Sign in to Dropcontact and open Integrations & API.",
+                 "Copy your API key and paste it here."),
+    setup_note="Email and contact enrichment spend credits on verified results. Connection verification reads the balance without spending a credit.",
+    auth_uri="", token_uri="", scopes={}, client_id_setting="", client_secret_setting="",
+    category="Enrichment",
+    summary="Find and verify B2B work emails, enrich contacts and companies, and clean job titles.",
+    base_url="https://api.dropcontact.com",
+    docs_url="https://developer.dropcontact.com/",
+    probe_path="/v1/enrich/all", probe_method="POST", probe_json={"data": [{}]},
+    token_reject_field="error",
+)
+
+
 BRANDDEV = OAuthProvider(
     service="branddev",
     display_name="Context.dev",
@@ -4041,7 +4087,7 @@ REGISTRY: dict[str, OAuthProvider] = {
         GOOGLE_ADS, YOUTUBE,
         LINKEDIN, SLACK, X, TIKTOK, FACEBOOK, INSTAGRAM, META_ADS,
         # API-key providers
-        ANYAPI, APOLLO, PDL, AKTA, HUNTER, SUMBLE, MOLTSETS, OPENMART, HARVESTAPI, FETCHINIO, SIXTYFOUR, BLITZAPI, DROPLEADS,
+        ANYAPI, APOLLO, PDL, AKTA, HUNTER, MOBIUSENGINE_JOBS, SUMBLE, MOLTSETS, OPENMART, HARVESTAPI, FETCHINIO, SIXTYFOUR, BLITZAPI, DROPLEADS,
         QUICKENRICH, PROSPEO, AIARK, WIZA, LIMADATA, GETLEADSIO, SCRUBBY, ZEROBOUNCE, DATAGMA,
         TRYKITT, CONTACTOUT, MILLIONVERIFIER, BOUNCEBAN, CRUNCHBASE, MINIMAX, FISHAUDIO,
         OPENROUTER,
@@ -4054,7 +4100,7 @@ REGISTRY: dict[str, OAuthProvider] = {
         SCRAPEGRAPHAI, SERPER, LITESCRAPE, CLORO,
         # more Enrichment API-key providers
         LUSHA, CORESIGNAL, DIFFBOT, THECOMPANIESAPI, LEADMAGIC, ENRICHLAYER, FIBER_AI, CRUSTDATA, THEIRSTACK, AVIATO,
-        COMPANYENRICH, OCEANIO, ADYNTEL, TOMBA, TRESTLEIQ, HLRLOOKUP, PREDICTLEADS, FINDYMAIL, ANYMAILFINDER, BRANDDEV, ICYPEAS, LEADSFORGE,
+        COMPANYENRICH, OCEANIO, ADYNTEL, TOMBA, TRESTLEIQ, HLRLOOKUP, PREDICTLEADS, FINDYMAIL, ANYMAILFINDER, DROPCONTACT, BRANDDEV, ICYPEAS, LEADSFORGE,
         INFLUENCERSCLUB, VILLAGE,
         # Market data API-key providers
         COINGECKO, POLYGON, FINNHUB, TWELVEDATA, FMP, EODHD, MARKETSTACK, TIINGO,
@@ -4070,7 +4116,7 @@ DEFAULT_CAPABILITY = "read"
 # Shelf order in the marketplace. Anything carrying a category not named here sorts last, so a
 # provider added without one is visible rather than lost between the shelves.
 CATEGORY_ORDER = ("AI generation", "SEO", "Advertising", "Social media", "Enrichment",
-                  "Market data", "Research & public data", "Community", "Other")
+                  "Market data", "Research & public data", "Jobs data", "Community", "Other")
 
 
 def get(service: str) -> OAuthProvider | None:
