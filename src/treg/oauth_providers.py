@@ -3447,6 +3447,22 @@ ANYMAILFINDER = OAuthProvider(
     probe_path="/v5.1/account", token_verify_field="email",
 )
 
+ENROW = OAuthProvider(
+    service="enrow", display_name="Enrow", auth_kind="key",
+    token_label="API key", token_placeholder="your Enrow API key",
+    token_header="x-api-key", token_format="{secret}",
+    setup_url="https://app.enrow.io/",
+    setup_action_label="Get your Enrow API key",
+    setup_steps=("Sign in to Enrow and open API Settings.", "Copy your API key."),
+    setup_note="Email and phone searches use credits; the account check is free.",
+    auth_uri="", token_uri="", scopes={}, client_id_setting="", client_secret_setting="",
+    category="Enrichment",
+    summary="Find and verify professional emails and find phone numbers.",
+    base_url="https://api.enrow.io",
+    docs_url="https://docs.enrow.io/api-overview",
+    probe_path="/account/info",
+)
+
 
 DROPCONTACT = OAuthProvider(
     service="dropcontact", display_name="Dropcontact", auth_kind="key",
@@ -4120,7 +4136,7 @@ REGISTRY: dict[str, OAuthProvider] = {
         SCRAPEGRAPHAI, SERPER, LITESCRAPE, CLORO,
         # more Enrichment API-key providers
         LUSHA, CORESIGNAL, DIFFBOT, THECOMPANIESAPI, LEADMAGIC, ENRICHLAYER, FIBER_AI, CRUSTDATA, THEIRSTACK, AVIATO,
-        COMPANYENRICH, OCEANIO, ADYNTEL, TOMBA, TRESTLEIQ, HLRLOOKUP, PREDICTLEADS, FINDYMAIL, ANYMAILFINDER, DROPCONTACT, BRANDDEV, ICYPEAS, LEADSFORGE,
+        COMPANYENRICH, OCEANIO, ADYNTEL, TOMBA, TRESTLEIQ, HLRLOOKUP, PREDICTLEADS, FINDYMAIL, ANYMAILFINDER, ENROW, DROPCONTACT, BRANDDEV, ICYPEAS, LEADSFORGE,
         INFLUENCERSCLUB, VILLAGE,
         # Market data API-key providers
         COINGECKO, POLYGON, FINNHUB, TWELVEDATA, FMP, EODHD, MARKETSTACK, TIINGO,

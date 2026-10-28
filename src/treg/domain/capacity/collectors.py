@@ -814,6 +814,14 @@ async def _anymailfinder(c, key):
     return {"value": credits, "unit": "credits", "note": ""}
 
 
+async def _enrow(c, key):
+    d = await _get(c, "https://api.enrow.io/account/info", headers={"x-api-key": key})
+    credits = _finite(d.get("credits")) if isinstance(d, dict) else None
+    if credits is None or credits < 0:
+        raise ValueError("Enrow account returned an invalid credit balance")
+    return {"value": credits, "unit": "credits", "note": ""}
+
+
 async def _branddev(c, key):
     # No free account route exists — but a deliberate no-param call is a FREE validation error
     # (400, credits_consumed 0) whose body still carries key_metadata.credits_remaining.
@@ -1064,6 +1072,7 @@ BALANCE_ROUTES = {
     "companyenrich": _companyenrich,
     "findymail": _findymail,
     "anymailfinder": _anymailfinder,
+    "enrow": _enrow,
     "leadsforge": _leadsforge,
     "oceanio": _oceanio,
     "predictleads": _predictleads,
