@@ -1454,6 +1454,22 @@ def _enforce_catalog_body(ep: dict, body: bytes) -> None:
                     "message": f"{ep['id']} requires {expected} item in body.{name}",
                 },
             )
+        if ep.get("body_allowlist") and isinstance(value, list):
+            required_all = spec.get("item_required_all") or []
+            required_any = spec.get("item_required_any") or []
+            for index, item in enumerate(value):
+                if not (required_all or required_any):
+                    break
+                present = ({field for field, field_value in item.items()
+                            if field_value not in (None, "", [])} if isinstance(item, dict) else set())
+                if not set(required_all) <= present or (required_any and not set(required_any) & present):
+                    raise ResolutionFailed(
+                        "catalog_parameter_invalid", status_code=400, detail={
+                            "error": "catalog_parameter_invalid", "endpoint_id": ep["id"],
+                            "parameter": f"body.{name}.{index}",
+                            "message": f"{ep['id']} requires the declared contact fields in body.{name}.{index}",
+                        },
+                    )
 
 
 def _request_headers(headers) -> dict[str, str]:

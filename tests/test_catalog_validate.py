@@ -903,6 +903,18 @@ def test_strict_query_accepts_a_declared_path_parameter():
     assert not errors
 
 
+def test_body_allowlist_object_item_presence_rules():
+    ep = {'body_allowlist': True, 'method': 'POST',
+          'input': {'body': {'data': {'type': 'array[object]',
+                                      'item_required_any': ['email', 'linkedin']}}}}
+    errors = []
+    validator.check_body_allowlist(ep, 'example', errors)
+    assert not errors
+    ep['input']['body']['data']['item_required_any'] = []
+    validator.check_body_allowlist(ep, 'example', errors)
+    assert any('item_required_any' in error for error in errors)
+
+
 @pytest.mark.parametrize('patch,valid', [
     ({}, True),
     ({'strict_body': 'yes'}, False),

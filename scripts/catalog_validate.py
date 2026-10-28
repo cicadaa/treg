@@ -290,6 +290,17 @@ def check_body_allowlist(ep: dict, where: str, errors: list[str]) -> None:
         fail(errors, where, "body_allowlist must be true when present")
     elif ep.get("method") not in {"POST", "PUT", "PATCH"} or not isinstance(fields, dict) or not fields:
         fail(errors, where, "body_allowlist requires a body method with declared body fields")
+    for name, spec in (fields if isinstance(fields, dict) else {}).items():
+        if not isinstance(spec, dict):
+            continue
+        for rule in ("item_required_all", "item_required_any"):
+            if rule not in spec:
+                continue
+            values = spec[rule]
+            if (spec.get("type") != "array[object]" or not isinstance(values, list) or not values
+                    or any(not isinstance(value, str) or not value.strip() for value in values)
+                    or len(values) != len(set(values))):
+                fail(errors, where, f"body.{name}.{rule} requires distinct field names on array[object]")
 
 
 def check_platform_request(rule: object, input_schema: object, where: str,
