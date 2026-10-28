@@ -1231,6 +1231,13 @@ def test_basis_derivation_and_settlement_table_vs_usage():
     assert settlement.settle(presence, {"terminal": {"data": [{"company": "Example"}]}}) == 0
     assert settlement.settle(presence, {"terminal": {"data": []}}) == 80_000
 
+    supplied = settlement.derive_basis(
+        {"type": "per_success", "settle": "terminal_presence",
+         "presence": {"row": "data.0", "field": "email", "request_field": "data.0.email"}},
+        request={"body": {"data": [{"email": "invalid@example.com"}]}}, input_schema={},
+        unit_micro=1_000_000, terminal=True, response_estimate_micro=80_000)
+    assert settlement.settle(supplied, {"terminal": {"data": [{"email": []}]}}) == 80_000
+
     usage_cost = {"settle": "usage", "usage": {"path": "usage.cost", "unit": "usd"},
                   "fallback": {"value": 1.0}}
     usage = settlement.derive_basis(

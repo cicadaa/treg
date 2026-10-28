@@ -1013,9 +1013,10 @@ def check_cost(cost: dict, where: str, errors: list[str], warnings: list[str],
         presence = cost.get("presence")
         if settle == "terminal_presence":
             if (cost.get("type") != "per_success" or "reported_charge" in cost
-                    or not isinstance(presence, dict) or set(presence) != {"row", "field"}
+                    or not isinstance(presence, dict)
+                    or not {"row", "field"} <= set(presence) <= {"row", "field", "request_field"}
                     or any(not isinstance(presence.get(key), str)
-                           or not JSON_PATH.fullmatch(presence[key]) for key in ("row", "field"))):
+                           or not JSON_PATH.fullmatch(presence[key]) for key in presence)):
                 fail(errors, where, "cost.settle terminal_presence requires a per_success price and presence.row/field JSON paths")
         elif presence is not None:
             fail(errors, where, "cost.presence requires settle: terminal_presence")

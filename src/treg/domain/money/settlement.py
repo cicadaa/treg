@@ -133,8 +133,12 @@ def derive_basis(
     frozen here so a later fx edit cannot re-price a task already in flight. `usd` needs none."""
     if cost.get("settle") == "terminal_presence":
         estimate = max(0, int(response_estimate_micro))
+        presence = cost["presence"]
+        request_field = presence.get("request_field")
+        request_billed = bool(request_field and _path(request.get("body"), request_field))
         return {
-            "when": "terminal", "amount": {"kind": "terminal_presence", **cost["presence"]},
+            "when": "terminal", "amount": {"kind": "terminal_presence", **presence,
+                                             "request_billed": request_billed},
             "fallback_micro": estimate, "reserve_micro": estimate,
         }
     if cost.get("table") or cost.get("settle") == "usage":
@@ -238,6 +242,8 @@ def settle(basis: dict, evidence: dict[str, Any]) -> int:
     amount = basis.get("amount") or {}
     kind = amount.get("kind")
     if kind == "terminal_presence":
+        if amount.get("request_billed"):
+            return max(0, int(basis.get("reserve_micro") or 0))
         row = _path(evidence.get("terminal"), amount["row"])
         if isinstance(row, dict):
             found = _path(row, amount["field"])

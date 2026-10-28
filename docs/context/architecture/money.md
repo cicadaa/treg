@@ -508,7 +508,9 @@ that bills on submission has the reported charge frozen into the basis
 none, `billed_failure` included: the task bills what the provider charged, not the estimate. Async
 `per_success` rows without a table keep settling on the submission response unless they declare
 `settle: terminal_presence`. That bounded one-item mode freezes a result row and field path, holds
-one result's price, and settles zero when the terminal row has no value or an empty value. A missing
+one result's price, and settles zero when the terminal row has no value or an empty value. An
+optional `presence.request_field` marks a supplied billable input at submission, so it settles the
+hold even when the terminal result omits that field. A missing
 or malformed terminal row settles the reserve; a confirmed terminal failure releases the hold.
 
 A submission whose own status is already a success word, on a descriptor with
