@@ -28,6 +28,15 @@ async def _get(c: httpx.AsyncClient, url: str, **kw) -> dict:
     return r.json()
 
 
+async def _orbisearch(c, key):
+    d = await _get(c, "https://api.orbisearch.com/v1/credits",
+                   headers={"X-API-Key": key})
+    balance = _finite(d.get("credits")) if isinstance(d, dict) else None
+    if balance is None or balance < 0:
+        raise ValueError("OrbiSearch returned no valid credit balance")
+    return {"value": balance, "unit": "credits", "note": "prepaid credit balance"}
+
+
 def _finite(raw):
     """A finite JSON number, sign kept; None for anything else (Booleans and strings included)."""
     return raw if type(raw) in (int, float) and math.isfinite(raw) else None
@@ -1029,6 +1038,7 @@ async def _piapi(c, key):
 
 
 BALANCE_ROUTES = {
+    "orbisearch": _orbisearch,
     "dropcontact": _dropcontact,
     "theirstack": _theirstack,
     "anyapi": _anyapi,

@@ -401,6 +401,27 @@ async def test_fetchin_capacity_uses_free_subscription_balance():
     assert "account limit 5 requests/s" in row["note"]
 
 
+async def test_orbisearch_capacity_uses_free_credits_route():
+    def probe(request):
+        assert request.method == "GET"
+        assert request.url == "https://api.orbisearch.com/v1/credits"
+        assert request.headers["x-api-key"] == "test-key"
+        return httpx.Response(200, json={"credits": 1250.5, "user_id": "user_example"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(probe)) as client:
+        row = await collectors._orbisearch(client, "test-key")
+    assert row == {"value": 1250.5, "unit": "credits", "note": "prepaid credit balance"}
+
+
+@pytest.mark.parametrize("balance", [None, True, -1, "12"])
+async def test_orbisearch_capacity_rejects_invalid_balance(balance):
+    async with httpx.AsyncClient(transport=httpx.MockTransport(
+        lambda _request: httpx.Response(200, json={"credits": balance})
+    )) as client:
+        with pytest.raises(ValueError, match="valid credit balance"):
+            await collectors._orbisearch(client, "test-key")
+
+
 @pytest.mark.parametrize("remaining", [None, True, -1, "51000", float("nan")])
 async def test_fetchin_capacity_rejects_uncertain_balances(remaining):
     def probe(_request):
