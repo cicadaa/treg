@@ -61,6 +61,12 @@ and sums every pool that can pay for a call (Fiber AI's trial and paid pools). V
 `OVERDRAFT_SERVED` keep serving past zero, so their low balance is informational and `overdrawn`;
 each needs a refusal signature.
 
+TheirStack's free balance route returns allocated `api_credits` and `used_api_credits`. The dashboard
+shows usage against the allocation, so the collector reports the nonnegative difference as remaining
+API credits. The upstream docs label `api_credits` as available, but it does not fall as usage rises.
+The shared key is paced at the paid tier's four requests per second. The funded account was not
+exhausted to capture a provider-specific 402 body.
+
 Octen's PAYG balance has no account balance or usage endpoint in its published OpenAPI, so
 `NO_BALANCE_API` reports it as dashboard-only. `_KNOWN` classifies the account as manually funded
 cash. The shared-key rate policy spaces calls at five per second, below the Base plan's displayed
@@ -366,7 +372,10 @@ quota gate. BYOK calls bypass it.
   `exhausted` until `resets_at`, or until the next sweep can prove otherwise.
 - **`sweep.py`** — `run_sweep(db)`: import policies → collect all providers in parallel (DB idle
   while the network is in flight) → one `CapacitySnapshot` per provider → publish each
-  `LatestState` to ratestore as `capacity:state:<provider>` (24 h TTL) → one commit. A note that
+  `LatestState` to ratestore as `capacity:state:<provider>` (24 h TTL) → one commit. The key is
+  the account's Settings slot spelling (`fiber_ai`); `state_key()` maps a catalog id (`fiber-ai`)
+  onto it through `platform_setting_name`, so the view and `clear_sweep_state` read the published
+  state under either spelling. A note that
   looks like a credential is withheld before it is stored. It never touches the call path's locks
   (`capacity:lock:*`): the meter it reads may not be the allowance that ran out.
 - **`marks.py`** - the call-path breaker, its own namespace `capacity:lock:<key>`; key = provider
