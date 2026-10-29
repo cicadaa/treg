@@ -501,7 +501,7 @@
   .xr-t .w + .w > span { animation-delay: .27s; }
   @keyframes xrrise { to { transform: none; } }
   .xr-rot { position: relative; display: inline-block; height: 1.12em; vertical-align: top; transition: width .5s cubic-bezier(.65,0,.35,1); }
-  .xr-b { position: absolute; left: 0; top: .05em; display: inline-flex; align-items: baseline; gap: .16em; line-height: 1.02; white-space: nowrap; color: var(--hot); -webkit-text-fill-color: var(--hot); opacity: 0; transform: translateY(35%); transition: opacity .45s, transform .6s cubic-bezier(.65,0,.35,1); }
+  .xr-b { position: absolute; left: 0; top: .05em; display: inline-flex; align-items: baseline; gap: .16em; line-height: 1.02; white-space: nowrap; color: var(--hot); -webkit-text-fill-color: var(--hot); opacity: 0; transform: translateY(35%); transition: opacity .28s, transform .6s cubic-bezier(.65,0,.35,1); }
   .xr-b.on { opacity: 1; transform: none; }
   .xr-b.out { opacity: 0; transform: translateY(-35%); }
   .xr-b img.tile { padding: 0; }
@@ -731,6 +731,9 @@
   .xr-pin.sm-only { display: none; }
   .xr-pin.flip > span { left: auto; right: 0; padding: 0 9px 0 0; flex-direction: row-reverse; box-shadow: inset -1.5px 0 0 rgba(16,16,16,.55); }
   .xr-pin.key b { background: #118453; }
+  /* over the hero the bar is see-through, so the hero's gradient runs to the top; it frosts once the page scrolls */
+  .nav.light:not(.scrolled) { background: transparent; border-bottom-color: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  .nav.light.scrolled { background: rgba(253,252,251,.82); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); border-bottom-color: rgba(16,16,16,.06); }
 </style>
 <script src="/captcha.js" defer></script>
 </head>
