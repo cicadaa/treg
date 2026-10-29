@@ -3438,7 +3438,7 @@ _SITEMAP_PAGES: tuple[tuple[str, str, str], ...] = (
     ("/ugc", "ugc.html", "0.8"),
     ("/aeo", "aeo.html", "0.8"),
     ("/rankings", "rankings.html", "0.8"),
-    ("/copy-virality", "copy-virality.html", "0.8"),
+    ("/rea-growth", "rea-growth.html", "0.8"),
     ("/jev", "jev.html", "0.8"),
     ("/terms", "terms.html", "0.2"),
     ("/privacy", "privacy.html", "0.2"),
@@ -3719,12 +3719,12 @@ async def jev_memory_skill_md():
     return _serve_md("skills/jev-memory/SKILL.md")
 
 
-@app.get("/skills/copy-virality/SKILL.md", include_in_schema=False)
-async def copy_virality_skill_md():
-    """The copy-virality skill: the /copy-virality flow (a company's growth moves, its content per channel,
+@app.get("/skills/rea-growth/SKILL.md", include_in_schema=False)
+async def rea_growth_skill_md():
+    """The rea-growth skill: the /rea-growth flow (a company's growth moves, its content per channel,
     the plays to copy) as a file an agent can follow. Opt-in like jev-memory: kept out of the
     well-known index, so `treg skill bootstrap` (install.sh) never installs it unasked."""
-    return _serve_md("skills/copy-virality/SKILL.md")
+    return _serve_md("skills/rea-growth/SKILL.md")
 
 
 @app.get("/feedback.md", include_in_schema=False)
@@ -3943,21 +3943,21 @@ async def aeo_page(request: Request):
     return _static_page("aeo.html", request)
 
 
-@app.get("/copy-virality", include_in_schema=False)
-async def copy_virality_page(request: Request):
+@app.get("/rea-growth", include_in_schema=False)
+async def rea_growth_page(request: Request):
     """REA for growth: reverse engineer how a company grows. The agent walks the target's path
     from first touch to sharing through treg (traffic, search, ads, posts, pages, links, job
     openings) and returns plays marked seen or inferred, each with the ask that runs it. Served
     like /aeo: canonical, in the sitemap, no-cache, relative asset paths."""
-    return _static_page("copy-virality.html", request)
+    return _static_page("rea-growth.html", request)
 
 
-@app.get("/copy-virality.md", include_in_schema=False)
-async def copy_virality_md():
-    """The full Lovable report behind /copy-virality as Markdown: what the page's "Copy the playbook"
+@app.get("/rea-growth.md", include_in_schema=False)
+async def rea_growth_md():
+    """The full Lovable report behind /rea-growth as Markdown: what the page's "Copy the playbook"
     button copies, and what agents read instead of the rendered page. `noindex`: the HTML page is
     the indexed copy."""
-    resp = _serve_md("copy-virality.md")
+    resp = _serve_md("rea-growth.md")
     resp.headers["X-Robots-Tag"] = "noindex"
     return resp
 
@@ -4125,7 +4125,7 @@ async def jev_xboost_judge(request: Request, db: AsyncSession = Depends(get_sess
 # chronological (newest first), not alphabetical.
 _BLOG_LAUNCHES: list[tuple[str, str, str, str]] = [
     # (slug, title, date, one-line blurb)
-    ("/copy-virality", "REA for Growth", "2026-10-23",
+    ("/rea-growth", "REA for Growth", "2026-10-23",
      "Name a company; your agent takes its distribution apart and hands you plays to copy."),
     ("/aeo", "How to Get AI to Recommend Your Product", "2026-10-17",
      "Four steps and one prompt: what customers ask, who AI recommends, the sites it cites, getting on them."),

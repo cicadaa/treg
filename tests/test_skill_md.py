@@ -99,23 +99,23 @@ async def test_web_access_landing_page_installs_the_skill(clients):
     assert "/web-arena/api/leaderboard" in r.text
 
 
-async def test_copy_virality_skill_is_served_but_opt_in(clients):
-    """The /copy-virality flow as a skill, served by URL with its placeholders filled, but kept out of
+async def test_rea_growth_skill_is_served_but_opt_in(clients):
+    """The /rea-growth flow as a skill, served by URL with its placeholders filled, but kept out of
     the index so install.sh never installs it unasked."""
-    r = await clients.get("/skills/copy-virality/SKILL.md")
-    assert r.status_code == 200 and r.text.startswith("---\nname: copy-virality")
+    r = await clients.get("/skills/rea-growth/SKILL.md")
+    assert r.status_code == 200 and r.text.startswith("---\nname: rea-growth")
     assert "{BASE}" not in r.text
     idx = (await clients.get("/.well-known/skills/index.json")).json()["skills"]
-    assert "copy-virality" not in [s["name"] for s in idx]
+    assert "rea-growth" not in [s["name"] for s in idx]
 
 
-def test_copy_virality_skill_names_only_endpoints_that_exist():
-    """Unlike lead-signals, copy-virality names endpoint ids step by step, so an agent calls them
+def test_rea_growth_skill_names_only_endpoints_that_exist():
+    """Unlike lead-signals, rea-growth names endpoint ids step by step, so an agent calls them
     as written. A renamed or retired row would send it to a 404 mid-run; this fails first."""
     from treg.domain.catalog import store as catalog_store
 
     ids = {e["id"] for e in catalog_store.load().endpoints}
-    text = (Path(__file__).resolve().parent.parent / "src/treg/web/skills/copy-virality/SKILL.md").read_text(
+    text = (Path(__file__).resolve().parent.parent / "src/treg/web/skills/rea-growth/SKILL.md").read_text(
         encoding="utf-8")
     named = set(re.findall(r"`([a-z0-9]+(?:\.[a-z0-9_-]+){2,})`", text))
     assert len(named) > 20

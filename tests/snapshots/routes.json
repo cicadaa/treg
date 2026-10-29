@@ -861,8 +861,8 @@
       "GET",
       "HEAD"
     ],
-    "name": "copy_virality_skill_md",
-    "path": "/skills/copy-virality/SKILL.md"
+    "name": "rea_growth_skill_md",
+    "path": "/skills/rea-growth/SKILL.md"
   },
   {
     "kind": "APIRoute",
@@ -1050,8 +1050,8 @@
       "GET",
       "HEAD"
     ],
-    "name": "copy_virality_page",
-    "path": "/copy-virality"
+    "name": "rea_growth_page",
+    "path": "/rea-growth"
   },
   {
     "kind": "APIRoute",
@@ -1059,8 +1059,8 @@
       "GET",
       "HEAD"
     ],
-    "name": "copy_virality_md",
-    "path": "/copy-virality.md"
+    "name": "rea_growth_md",
+    "path": "/rea-growth.md"
   },
   {
     "kind": "APIRoute",

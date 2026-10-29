@@ -1,9 +1,9 @@
 ---
-name: copy-virality
+name: rea-growth
 description: Use when the user wants to know how a company gets its users, reverse engineer a competitor's growth or distribution, copy what a winning company does on each channel, or study a brand's content strategy (titles, thumbnails, covers, captions, graphics) on YouTube, TikTok, Instagram, X, LinkedIn or Reddit. Also for "how did X grow", "teardown of X's marketing", "what content works for X".
 ---
 
-# Copy virality
+# REA growth
 
 A company in, a playbook out: when it grew, which moves did it, how its content is made on each
 channel and what wins there, and ten plays the user can copy, each with a ready prompt.

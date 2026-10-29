@@ -1,6 +1,6 @@
 # REA for growth: how Lovable gets its users
 
-A real run of the `/copy-virality` prompt against **lovable.dev**, made through treg on 2026-10-23.
+A real run of the `/rea-growth` skill against **lovable.dev**, made through treg on 2026-10-23.
 Data cost: **$0.58**. Every finding is marked **SEEN** (a call result shows it) or **INFERRED**
 (reasoned from what was seen). Counts are as of 2026-10-23 and will change. "Why it works" lines
 are interpretation. treg is not affiliated with Lovable.
@@ -234,6 +234,13 @@ Endpoints called through treg, in order, with what each cost:
 | Links | `dataforseo.x.backlinks-timeseries-new-lost-summary-live` | rejected `date_from`, not billed | $0 |
 | Next | `predictleads.companies.job_openings` | 678 openings | $0.04 |
 | | **Total** (balance before minus after) | | **$0.577** |
+
+Checked again on 2026-10-29, for the page's evidence cards:
+
+| Step | Endpoint | Result | Cost |
+|---|---|---|---:|
+| Ads | `scrapecreators.x.v1-facebook-adlibrary-company-ads` × 3 pages | 90 most-seen of 711 active ads: the top 4 in Portuguese, 45 linking to `/pt-br/`, 72 on 2 captions | $0.006 |
+| Links | `dataforseo.web.backlinks.list`, filtered to `?via=` and to "Edit with" anchors from `*.lovable.app` | 918 domains with an affiliate code; 17,118 app domains with the badge | $0.052 |
 
 - **Limits:**
   - US search data only.
