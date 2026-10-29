@@ -759,7 +759,7 @@
   <div class="xr-in">
     <p class="xr-eye"><span>/REA-growth with</span><span class="ag"><img src="media/people-search/claude-code.png" alt="Claude Code" title="Claude Code"><img src="media/growth-rea/codex.svg" alt="Codex" title="Codex"><img src="media/people-search/hermes.png" alt="Hermes" title="Hermes"></span></p>
     <h1 class="xr-t"><span class="w"><span>Copy how <span class="xr-rot" id="xrRot"><span class="xr-b on"><img src="media/growth-rea/brands/lovable.svg" alt="">Lovable</span><span class="xr-b"><img src="logos/tinyfish.svg" alt="">TinyFish</span><span class="xr-b"><img src="media/growth-rea/brands/typesafe.png" alt="" class="tile">TypeSafe</span><span class="xr-b"><img src="logos/treg.svg" alt="">treg</span></span> grows</span></span></h1>
-    <div class="xr-cta"><a class="xr-btn" href="/app?ref=rea-growth" id="ctaHero">Set up treg <span>→</span></a><a class="xr-link" href="#run">Watch it run ↓</a></div>
+    <div class="xr-cta"><a class="xr-btn" href="/app?ref=rea-growth" id="ctaHero">Set up treg <span>→</span></a><a class="xr-link" href="#prompt" id="ctaCopy">Copy prompt ↓</a></div>
   </div>
 </header>
 
@@ -1204,9 +1204,15 @@
     copy(this, out.join('\n\n'), 'Copy the playbook');
   }
   $('copyPlaybook').addEventListener('click', copyPlaybook);
-  $('copySkill').addEventListener('click', function () {
-    var then = document.querySelector('#prompt .copybox .then').textContent;
-    copy(this, 'I approve you setup treg following ' + $('llmsUrl').textContent + '\n\n' + then, 'Copy prompt');
+  function promptText() {
+    return 'I approve you setup treg following ' + $('llmsUrl').textContent + '\n\n' + document.querySelector('#prompt .copybox .then').textContent;
+  }
+  $('copySkill').addEventListener('click', function () { copy(this, promptText(), 'Copy prompt'); });
+  /* hero: copies the same prompt, then shows it at the bottom */
+  $('ctaCopy').addEventListener('click', function (e) {
+    e.preventDefault();
+    copy(this, promptText(), 'Copy prompt ↓');
+    $('prompt').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
   });
   /* Setup CTAs: signed in → the app; signed out → the sign-in modal */
   var APP = '/app?ref=rea-growth'; /* the CTAs' href; boot.js keeps the ref through sign-in */
