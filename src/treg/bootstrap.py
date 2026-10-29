@@ -770,7 +770,12 @@ def _lifespan(role: AppRole):
             routed_call.configure_endpoint_observation_reader(endpoint_observations)
             # Measured verdict quality for X-Treg-Route-Decisive; unset settings keep price order.
             from .infra import route_quality
-            routed_call.configure_route_quality_reader(route_quality.from_settings(get_settings()))
+            try:
+                quality_reader = route_quality.from_settings(get_settings())
+            except Exception:  # a bad quality config must never stop serving; the header keeps price order
+                logging.getLogger("treg").warning("event=route_quality_disabled", exc_info=True)
+                quality_reader = None
+            routed_call.configure_route_quality_reader(quality_reader)
             mcp_reader_bound = role != "control" and _mcp is not None
             if mcp_reader_bound:
                 _mcp.configure_endpoint_observation_reader(endpoint_observations)

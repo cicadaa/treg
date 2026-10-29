@@ -41,14 +41,16 @@ def parse(doc: Any) -> Snapshot:
     """The routing file the scorer publishes: `{"slices": {slice: {endpoint_id: {decisive_rate,
     agreement, comparable}}}}`. Entries missing a number are left out, never guessed."""
     out: Snapshot = {}
-    slices = (doc or {}).get("slices") if isinstance(doc, dict) else None
-    for name, rows in (slices or {}).items():
+    slices = doc.get("slices") if isinstance(doc, dict) else None
+    for name, rows in (slices.items() if isinstance(slices, dict) else ()):
         if name not in SLICES or not isinstance(rows, dict):
             continue
         for endpoint_id, row in rows.items():
             try:
                 q = VerdictQuality(float(row["decisive_rate"]), float(row["agreement"]), int(row["comparable"]))
             except (KeyError, TypeError, ValueError):
+                continue
+            if not (0 <= q.decisive_rate <= 1 and 0 <= q.agreement <= 1 and q.comparable >= 0):
                 continue
             out.setdefault(name, {})[str(endpoint_id)] = q
     return out

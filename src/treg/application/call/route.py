@@ -587,7 +587,11 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
         if options.decisive and not options.prefer and any(t.outcome != "skipped" for t in tried):
             on = "catch_all" if "catch_all" in undecided_words else "all"
             if on != ordered_on:
-                queue = route_quality.by_quality(queue, lambda item: item[1].endpoint["id"], quality, on)
+                try:
+                    queue = route_quality.by_quality(queue, lambda item: item[1].endpoint["id"], quality, on)
+                except Exception:  # quality only orders the fallback; a bad number keeps the order it had
+                    log.warning("route quality ordering failed", exc_info=True)
+                    quality = None
                 ordered_on = on
         n, cand = queue.pop(0)
         if options.max_cost_micro is not None and spent + (cand.price_micro or 0) > options.max_cost_micro:

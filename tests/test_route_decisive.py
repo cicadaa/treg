@@ -169,3 +169,52 @@ async def test_quality_cache_serves_stale_and_survives_failures():
     assert await cache.get("c") is first, "stale is served while the refresh runs"
     await asyncio.sleep(0)
     assert calls == ["c", "c"] and await cache.get("c") is first, "a failed refresh keeps the last value"
+
+
+class _Broken:
+    def __init__(self):
+        self.calls = 0
+
+    async def get(self, capability):
+        self.calls += 1
+        raise RuntimeError("store down")
+
+
+async def test_without_the_header_the_quality_reader_is_never_asked(clients: AsyncClient, verifiers_on, monkeypatch):
+    seen, reader = [], _Broken()
+    monkeypatch.setattr(call_route, "_route_quality_reader", reader)
+    monkeypatch.setattr(call_service, "relay", _relay({"bounceban": [_bb("unknown")]}, seen))
+    r = await clients.post(f"/call/{VERIFY}", json=ADDRESS)
+    assert r.status_code == 200 and seen == ["bounceban"] and reader.calls == 0
+
+
+async def test_an_unreadable_quality_store_keeps_price_order(clients: AsyncClient, verifiers_on, monkeypatch):
+    seen = []
+    monkeypatch.setattr(call_route, "_route_quality_reader", _Broken())
+    monkeypatch.setattr(call_service, "relay", _relay(
+        {"bounceban": [_bb("unknown")], "tomba-verify": [_word("valid")], "hunter-verify": [_word("valid")]}, seen))
+    r = await clients.post(f"/call/{VERIFY}", json=ADDRESS, headers=ON)
+    assert r.status_code == 200, r.text
+    assert len(seen) == 2 and r.json()["_treg"]["decision"] == {
+        "decided": True, "decided_by": seen[1].removesuffix("-verify"), "ordered_by": "price"}
+
+
+async def test_a_failing_reorder_keeps_the_order_it_had(clients: AsyncClient, verifiers_on, monkeypatch):
+    seen = []
+    monkeypatch.setattr(call_route, "_route_quality_reader", _Reader(_quality({"tomba.people.email.verify": (0.9, 0.99)})))
+
+    def boom(*args, **kwargs):
+        raise ValueError("bad number")
+    monkeypatch.setattr(quality, "by_quality", boom)
+    monkeypatch.setattr(call_service, "relay", _relay(
+        {"bounceban": [_bb("unknown")], "tomba-verify": [_word("valid")], "hunter-verify": [_word("valid")]}, seen))
+    r = await clients.post(f"/call/{VERIFY}", json=ADDRESS, headers=ON)
+    assert r.status_code == 200, r.text
+    assert len(seen) == 2 and r.json()["_treg"]["decision"]["ordered_by"] == "price"
+
+
+def test_parse_never_raises_on_odd_files():
+    for doc in (None, [], "x", {"slices": []}, {"slices": {"all": []}}, {"slices": {"all": {"a": []}}},
+                {"slices": {"all": {"a": {"decisive_rate": 2, "agreement": 0.9, "comparable": 500}}}},
+                {"slices": {"all": {"a": {"decisive_rate": "x", "agreement": 0.9, "comparable": 500}}}}):
+        assert quality.parse(doc) == {}
