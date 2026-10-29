@@ -298,6 +298,7 @@ class Settings(BaseSettings):
     platform_key_trykitt: str = ""  # x-api-key; credits.jobCredits reports USD
     platform_key_contactout: str = ""  # raw API token; injected into the token header
     platform_key_millionverifier: str = ""  # raw key; injected as ?api=…
+    platform_key_orbisearch: str = ""  # X-API-Key; prepaid validation and enrichment credits
     platform_key_bounceban: str = ""  # raw key in Authorization; prepaid verification credits
     platform_key_hunter: str = ""
     platform_key_sumble: str = ""  # Bearer; Pro monthly credits, optional vendor auto-top-up
@@ -349,6 +350,7 @@ class Settings(BaseSettings):
     platform_key_predictleads: str = ""   # base64 of "api_key:api_token" (HTTP Basic, like dataforseo)
     platform_key_findymail: str = ""      # Bearer key
     platform_key_anymailfinder: str = ""  # raw Authorization key; prepaid credits
+    platform_key_enrow: str = ""          # x-api-key; prepaid email and phone credits
     platform_key_branddev: str = ""       # Bearer key
     platform_key_icypeas: str = ""        # raw key (Authorization, no Bearer)
     platform_key_leadsforge: str = ""     # Bearer key
@@ -590,6 +592,15 @@ class Settings(BaseSettings):
     archive_body_read_lookup: Literal["db", "r2-first"] = "db"
     archive_body_read_result: Literal["db", "r2-first"] = "db"
     archive_body_read_terminal: Literal["db", "r2-first"] = "db"
+    # Measured verdict quality the router reads under `X-Treg-Route-Decisive`
+    # (infra/route_quality.py): `<prefix><capability>/routing.json` in a private bucket an
+    # operator's scorer writes. Off until all five are set; the header then keeps price order.
+    route_quality_endpoint: str = ""
+    route_quality_bucket: str = ""
+    route_quality_prefix: str = ""
+    route_quality_access_key_id: str = Field(default="", repr=False)
+    route_quality_secret_access_key: str = Field(default="", repr=False)
+    route_quality_ttl_s: float = Field(default=900.0, gt=0)
     archive_object_store_endpoint: str = ""
     archive_object_store_bucket: str = ""
     archive_object_store_access_key_id: str = Field(default="", repr=False)
