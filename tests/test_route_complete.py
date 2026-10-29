@@ -104,3 +104,21 @@ async def test_another_identifier_nobody_confirms_is_not_returned(clients, profi
     r = await clients.post(PROFILE, json={"linkedin_url": ASKED}, headers=COMPLETE)
     d = r.json()
     assert d.get("_treg", {}).get("served_by") != "anyapi.linkedin.user.profile.full", r.text
+
+
+async def test_the_contract_names_what_a_complete_answer_carries(clients, profile_on, monkeypatch):
+    """Most fields but no headline (a scraper that reads only the top card): still weak, because the
+    contract's `complete` list names the headline. Measured 2026-10-29: such answers on 20 of 278
+    people cost 3 points of net correct fields."""
+    from treg.domain.catalog import store
+    assert store.load().contracts["linkedin.user.profile"].complete == ("full_name", "headline", "location")
+    headless = _fetchin()
+    headless["title"] = None
+    seen = []
+    monkeypatch.setattr(call_service, "relay", _relay_by_provider(
+        {"fetchin": [(200, headless)], "harvest": [(200, _harvest(ASKED))]}, seen))
+    r = await clients.post(PROFILE, json={"linkedin_url": ASKED}, headers=COMPLETE)
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["_treg"]["served_by"] == "harvestapi.linkedin.user.profile.main"
+    assert d["_treg"]["tried"][0]["outcome"] == "weak" and "headline" in d["_treg"]["tried"][0]["detail"]
