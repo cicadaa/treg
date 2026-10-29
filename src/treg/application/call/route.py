@@ -25,6 +25,20 @@ verdict, reported in `_treg.verification`; the find's answer is not altered.
 contract's `confirm` field: the waterfall goes on after an unconfirmed hit, each attempt at its own
 price. The first provider's answer is returned either way, reported in `_treg.confirmation`; when
 no second provider agrees, it comes back marked unconfirmed rather than as a miss.
+
+`X-Treg-Route-Decisive` makes an answer count only when its verdict word is one the contract's
+`verdict.decisive` lists (an email check: valid or invalid). Any other word (unknown, catch-all,
+risky) or a failed attempt sends the call on, at most two more providers, each at its own price;
+the providers left are then asked in order of measured verdict quality (domain/catalog/routing/
+quality.py) where it is known, in their price order where it is not. When none decides, the first
+undecided answer comes back, reported in `_treg.decision`.
+
+`X-Treg-Route-Quality` asks the whole plan in order of measured answer quality for the identity
+sent (the same quality file, sliced by identity variant), the unrated behind in price order; it is
+reported in `_treg.ordered_by`. `X-Treg-Route-Upgrade: <key>` re-asks this endpoint by that key
+alone when the hit carries it (an email's answer naming a LinkedIn URL), as a linked routed child
+`:u` ordered by quality; its answer replaces the first only when it is a hit about the same person,
+reported in `_treg.upgrade`. Both are opt-in.
 """
 
 from __future__ import annotations
@@ -33,6 +47,7 @@ from __future__ import annotations
 import json
 import re
 import logging
+import unicodedata
 from dataclasses import dataclass, field
 from urllib.parse import urlencode
 
@@ -50,6 +65,7 @@ from ...domain.catalog import results as catalog_results
 from ...domain.catalog import stats as endpoint_stats
 from ...domain.catalog import store as catalog_store
 from ...domain.catalog.routing import paths as P
+from ...domain.catalog.routing import quality as route_quality
 from ...domain.catalog.routing.contracts import canonical_identity, declared_miss, declared_not_found, miss_status
 from ...domain.catalog.routing.plan import (
     MAX_ERROR_FALLBACKS, Candidate, Plan, candidates_for, cost_at, ignored_filters, rank, unscoped,
@@ -78,6 +94,25 @@ def clear_endpoint_observation_reader(reader: endpoint_stats.EndpointObservation
         _endpoint_observation_reader = None
 
 
+_route_quality_reader: route_quality.RouteQualityReader | None = None
+
+
+def configure_route_quality_reader(reader: route_quality.RouteQualityReader | None) -> None:
+    """Bind the measured verdict quality `X-Treg-Route-Decisive` orders by; None = price order."""
+    global _route_quality_reader
+    _route_quality_reader = reader
+
+
+async def _route_quality(capability: str) -> route_quality.Snapshot | None:
+    if _route_quality_reader is None:
+        return None
+    try:
+        return await _route_quality_reader.get(capability)
+    except Exception:  # quality only orders the fallback; no data keeps price order
+        log.warning("route quality unavailable", exc_info=True)
+        return None
+
+
 async def _observed_stats(endpoint_ids: list[str]) -> endpoint_stats.ObservationSnapshot:
     """Read advisory routing evidence without making the request wait for its DB aggregate."""
     reader = _endpoint_observation_reader
@@ -98,11 +133,16 @@ MERGE_HEADER = "x-treg-route-merge"
 STRICT_FILTERS_HEADER = "x-treg-route-strict-filters"
 VERIFY_HEADER = "x-treg-route-verify"
 CONFIRM_HEADER = "x-treg-route-confirm"
+DECISIVE_HEADER = "x-treg-route-decisive"
+QUALITY_HEADER = "x-treg-route-quality"
+UPGRADE_HEADER = "x-treg-route-upgrade"
 _DROP_FROM_CHILD = frozenset({b"content-length", b"content-type", b"transfer-encoding", b"idempotency-key",
                               b"x-treg-route-waterfall", b"x-treg-route-max-cost", b"x-treg-route-prefer",
                               b"x-treg-route-exclude", b"x-treg-route-min-results",
                               b"x-treg-route-merge", b"x-treg-route-strict-filters",
-                              b"x-treg-route-verify", b"x-treg-route-confirm", b"host"})
+                              b"x-treg-route-verify", b"x-treg-route-confirm",
+                              b"x-treg-route-decisive", b"x-treg-route-quality",
+                              b"x-treg-route-upgrade", b"host"})
 _CALLER_FAULT = frozenset({400, 401, 403, 404, 405, 409, 422})
 _CANDIDATE_LOCAL_FAILURES = frozenset({"tool_access_denied", "policy_denied", "capability_pinned"})
 _GLOBAL_REFUSALS = frozenset({"insufficient_balance", "tag_spend_cap_reached",
@@ -154,6 +194,9 @@ class RouteOptions:
     strict_filters: bool = False  # drop any candidate that cannot express a filter the caller sent
     verify: bool = False     # after a hit, run the contract's check (`X-Treg-Route-Verify`)
     confirm: bool = False    # a hit needs a second provider's same answer (`X-Treg-Route-Confirm`)
+    decisive: bool = False   # a hit needs a deciding verdict word (`X-Treg-Route-Decisive`)
+    quality: bool = False    # ask providers in order of measured answer quality (`X-Treg-Route-Quality`)
+    upgrade: str | None = None  # re-ask by this identity key when the hit carries it (`X-Treg-Route-Upgrade`)
 
     @classmethod
     def from_headers(cls, get, default_max_cost_micro: int | None = None) -> "RouteOptions":
@@ -176,10 +219,15 @@ class RouteOptions:
         sf = str(get(STRICT_FILTERS_HEADER) or "").strip().lower()
         vf = str(get(VERIFY_HEADER) or "").strip().lower()
         cf = str(get(CONFIRM_HEADER) or "").strip().lower()
+        dc = str(get(DECISIVE_HEADER) or "").strip().lower()
+        ql = str(get(QUALITY_HEADER) or "").strip().lower()
+        up = str(get(UPGRADE_HEADER) or "").strip()
         return cls(waterfall=wf not in ("0", "false", "no", "off"),
                    max_cost_micro=max_cost, prefer=_list(get(PREFER_HEADER)), exclude=_list(get(EXCLUDE_HEADER)),
                    min_results=mr, merge=mg in ("1", "true", "yes", "on"), strict_filters=sf in ("1", "true", "yes", "on"),
-                   verify=vf in ("1", "true", "yes", "on"), confirm=cf in ("1", "true", "yes", "on"))
+                   verify=vf in ("1", "true", "yes", "on"), confirm=cf in ("1", "true", "yes", "on"),
+                   decisive=dc in ("1", "true", "yes", "on"), quality=ql in ("1", "true", "yes", "on"),
+                   upgrade=up or None)
 
 
 class _Bytes:
@@ -497,6 +545,22 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
             "message": (f"{CONFIRM_HEADER} needs the waterfall; drop {WATERFALL_HEADER}: 0. " if contract and contract.confirm else
                         f"{CONFIRM_HEADER} works only on {', '.join(confirmable)}; {ep['id']} has no confirm field. ")
                        + "Nothing was charged."})
+    if options.decisive and (contract is None or not contract.verdict_decisive or not options.waterfall):
+        # Refused before anything is planned or held, like confirm: with no deciding words, or no
+        # waterfall to go on with, the caller would believe an undecided answer was the last word.
+        decidable = sorted(f"treg.{cap}" for cap, c in catalog_store.load().contracts.items() if c.verdict_decisive)
+        raise ResolutionFailed("catalog_parameter_invalid", status_code=422, detail={
+            "error": "route_decisive_unsupported", "endpoint_id": ep["id"],
+            "message": (f"{DECISIVE_HEADER} needs the waterfall; drop {WATERFALL_HEADER}: 0. " if contract and contract.verdict_decisive else
+                        f"{DECISIVE_HEADER} works only on {', '.join(decidable)}; {ep['id']} has no deciding verdict words. ")
+                       + "Nothing was charged."})
+    if options.upgrade and (contract is None or (options.upgrade,) not in contract.identity
+                            or options.upgrade not in contract.output):
+        # Refused before anything is planned or held: the caller would believe a second lookup ran.
+        raise ResolutionFailed("catalog_parameter_invalid", status_code=422, detail={
+            "error": "route_upgrade_unsupported", "endpoint_id": ep["id"],
+            "message": f"{UPGRADE_HEADER} names an identity key the answer carries and {ep['id']} accepts on its own; "
+                       f"{options.upgrade!r} is not one. Nothing was charged."})
     await capacity_view.load()
     if get_settings().overflow_mode != "off":
         await overflow_routes_view.load()
@@ -533,7 +597,35 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
     cost_capped = False            # true when any candidate was skipped due to max-cost ceiling
     unconfirmed: list[tuple[str, tuple]] = []   # X-Treg-Route-Confirm: hits waiting for a second provider
     confirmed_by: str | None = None
-    for n, cand in enumerate(plan.candidates):
+    # X-Treg-Route-Decisive: answers whose verdict did not decide, the word that came back, and the
+    # measured quality the providers left are ordered by once the first attempt has not decided.
+    undecided: list[tuple] = []
+    undecided_words: list[str] = []
+    decided_by: str | None = None
+    quality = await _route_quality(ep["capability"]) if options.decisive or options.quality else None
+    ordered_on: str | None = None
+    queue = list(enumerate(plan.candidates))
+    # X-Treg-Route-Quality: the whole plan in order of measured answer quality for this identity,
+    # the unrated behind in price order. A caller's own X-Treg-Route-Prefer order stands.
+    if options.quality and not options.prefer and quality:
+        try:
+            queue = route_quality.by_quality(queue, lambda item: item[1].endpoint["id"], quality,
+                                             route_quality.variant_slice(plan.variant))
+            ordered_on = route_quality.variant_slice(plan.variant)
+        except Exception:  # a bad number keeps the price order
+            log.warning("route quality ordering failed", exc_info=True)
+    while queue:
+        # A caller's own X-Treg-Route-Prefer order stands; quality orders only the router's own choice.
+        if options.decisive and not options.prefer and any(t.outcome != "skipped" for t in tried):
+            on = "catch_all" if "catch_all" in undecided_words else "all"
+            if on != ordered_on:
+                try:
+                    queue = route_quality.by_quality(queue, lambda item: item[1].endpoint["id"], quality, on)
+                except Exception:  # quality only orders the fallback; a bad number keeps the order it had
+                    log.warning("route quality ordering failed", exc_info=True)
+                    quality = None
+                ordered_on = on
+        n, cand = queue.pop(0)
         if options.max_cost_micro is not None and spent + (cand.price_micro or 0) > options.max_cost_micro:
             tried.append(Attempt(cand.endpoint["id"], cand.endpoint["provider"], "skipped", None, 0, "would exceed max cost"))
             cost_capped = True
@@ -786,6 +878,16 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
             if weak_hits > MAX_WEAK_FALLBACKS:
                 break
             continue
+        if options.decisive:
+            word = catalog_results.verdict(cand.endpoint["id"], response.status, raw)
+            if word not in plan.contract.verdict_decisive:
+                tried[-1].outcome, tried[-1].detail = "weak", f"verdict {word or 'none'} does not decide"
+                undecided.append((cand, doc, core, raw))
+                undecided_words.append(word or "")
+                if len(undecided) > MAX_WEAK_FALLBACKS:
+                    break
+                continue
+            decided_by = cand.endpoint["provider"]
         if options.confirm:
             # A hit counts once ANOTHER provider returns the same value (one provider's two
             # endpoints share a source). The earlier hit is the answer: it was the cheaper ask.
@@ -804,6 +906,8 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
         break
     if winner is None and unconfirmed:
         winner = unconfirmed[0][1]   # nobody agreed: the first hit, marked unconfirmed
+    if winner is None and undecided:
+        winner = undecided[0]        # nobody decided: the first answer, already paid for, marked undecided
     if winner is None and best is not None:
         winner = best[1]          # nobody cleared min_results — the fullest answer we paid for wins
     if winner is None:
@@ -838,6 +942,15 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
     served = cand.endpoint["id"]
     winner_outcome = next(t.outcome for t in reversed(tried)
                           if t.endpoint_id == served and t.outcome in ("hit", "weak", "miss"))
+    upgrade, provider = None, cand.endpoint["provider"]
+    if options.upgrade and winner_outcome == "hit" and not given.get(options.upgrade):
+        remaining = max(0, options.max_cost_micro - spent) if options.max_cost_micro is not None else None
+        upgrade, better, upgrade_cost = await _run_upgrade(parent, ep, options.upgrade, output, remaining,
+                                                           execute_child, upstream_client)
+        spent += upgrade_cost
+        if better is not None:
+            output, doc, served = better
+            provider = served.split(".")[0]
     merged_from: list[str] = []
     if options.merge and len(answers) > 1:
         # A LIST answer is the only shape a union makes sense for, and the caller has already been
@@ -876,13 +989,19 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
         verification = _unchecked("no_hit")   # a miss is never checked; say why
     confirmation = ({"field": plan.contract.confirm, "confirmed": confirmed_by is not None, "confirmed_by": confirmed_by}
                     if options.confirm and winner_outcome in ("hit", "weak") else None)
+    decision = ({"decided": decided_by is not None, "decided_by": decided_by,
+                 "ordered_by": "quality" if ordered_on and quality else "price"}
+                if options.decisive and winner_outcome in ("hit", "weak") else None)
     body_out = {"output": output or {k: None for k in plan.contract.output}, "raw": doc,
-                "_treg": {"served_by": served, "provider": cand.endpoint["provider"], "tier": cand.tier,
+                "_treg": {"served_by": served, "provider": provider, "tier": cand.tier,
                           **({"merged_from": merged_from} if merged_from else {}),
                           **({"advice": advice} if advice else {}),
                           "outcome": winner_outcome, "tried": [t.view() for t in tried], "charged_micro": spent,
                           **({"verification": verification} if verification is not None else {}),
                           **({"confirmation": confirmation} if confirmation is not None else {}),
+                          **({"decision": decision} if decision is not None else {}),
+                          **({"upgrade": upgrade} if upgrade is not None else {}),
+                          **({"ordered_by": "quality" if ordered_on and quality else "price"} if options.quality else {}),
                           **({"capped": True} if cost_capped else {}),
                           **({"ignored_filters": list(cand.ignored)} if cand.ignored else {}),
                           **({"dropped": plan.dropped} if plan.dropped else {})}}
@@ -896,6 +1015,8 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
                                  **({"X-Treg-Ignored-Filters": ",".join(cand.ignored)} if cand.ignored else {}),
                                  **({"X-Treg-Route-Capped": "true"} if cost_capped else {}),
                                  **({"X-Treg-Route-Confirmed": str(confirmation["confirmed"]).lower()} if confirmation else {}),
+                                 **({"X-Treg-Route-Decided": str(decision["decided"]).lower()} if decision else {}),
+                                 **({"X-Treg-Route-Upgraded": str(upgrade["upgraded"]).lower()} if upgrade else {}),
                                  "X-Treg-Route-Outcome": winner_outcome}), spent
 
 
@@ -975,6 +1096,45 @@ async def _run_check(parent: CallContext, check, output: dict, remaining: int | 
         return {**_unchecked("checker_failed"), "cost_micro": cost}, cost
     word = catalog_results.verdict(ep["id"], response.status, raw)
     return {"verdict": word or "unknown", "checked": True, "served_by": ep["id"], "cost_micro": cost}, cost
+
+
+def _name_key(name) -> str | None:
+    """First initial and last word, folded: `Bill Gates` and `William H. Gates` are one person's name."""
+    words = re.sub(r"[^a-z ]+", " ", unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()).split() \
+        if isinstance(name, str) else []
+    return f"{words[0][0]}|{words[-1]}" if len(words) >= 2 else None
+
+
+async def _run_upgrade(parent: CallContext, ep: dict, key: str, output: dict, remaining: int | None,
+                       execute_child, upstream_client) -> tuple[dict, tuple | None, int]:
+    """`X-Treg-Route-Upgrade`: the hit named a stronger identity (a LinkedIn URL for an email), so ask
+    this same routed endpoint again by that key alone, its providers in order of measured quality.
+    Its answer replaces the first only when it is a hit about the same person (the contract's name
+    agrees); otherwise the first, already-paid answer stands. Returns (`_treg.upgrade`, the
+    replacing (output, raw, served_by) or None, money it moved). A failure costs the first answer nothing."""
+    value = output.get(key)
+    if not isinstance(value, str) or not value.strip():
+        return {"upgraded": False, "via": key, "reason": f"no_{key}"}, None, 0
+    child = CallContext(input=_child_input(parent, ep, {}, {key: value}, remaining, ((QUALITY_HEADER.encode(), b"1"),)),
+                        call_ref=f"{parent.call_ref}:u", meta=parent.meta, deferred_settles=None)
+    try:
+        response = await execute_child(child, upstream_client)
+        doc = json.loads(await _read(response))
+    except CallFailure as exc:
+        return {"upgraded": False, "via": key, "reason": exc.kind}, None, 0
+    except Exception:
+        log.warning("upgrade by %s failed after %s", key, parent.call_ref, exc_info=True)
+        return {"upgraded": False, "via": key, "reason": "failed"}, None, 0
+    cost = int(_header(response, "X-Treg-Cost-Micro") or 0)
+    meta = (doc.get("_treg") or {}) if isinstance(doc, dict) else {}
+    view = {"via": key, "served_by": meta.get("served_by"), "cost_micro": cost}
+    if not 200 <= response.status < 300 or meta.get("outcome") != "hit":
+        return {**view, "upgraded": False, "reason": "no_hit"}, None, cost
+    found = doc.get("output") or {}
+    if "full_name" in output and _name_key(found.get("full_name")) != _name_key(output.get("full_name")):
+        return {**view, "upgraded": False, "reason": "other_name"}, None, cost
+    return {**view, "upgraded": True}, ({**output, **{k: v for k, v in found.items() if v is not None}},
+                                        doc.get("raw"), meta.get("served_by")), cost
 
 
 def _summarize(parent: CallContext, **outcome) -> None:

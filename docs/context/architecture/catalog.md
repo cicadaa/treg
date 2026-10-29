@@ -1175,11 +1175,12 @@ have an answer before treg will spend its OWN money on an endpoint (see "platfor
 which is the whole reason the provenance keys exist.
 
 An asynchronous single-record `per_success` row whose provider reports no per-job charge may use
-`settle: terminal_presence` with `presence: {row: data.0, field: email}`. The fixed price is held
-through completion; a terminal row with an absent or empty field settles zero, and a nonempty
-field settles the held price. A missing or malformed row settles the reserve for review rather than
-assuming a free call. Validation requires `body_allowlist` and a required input array with exactly
-one item, so a shared key cannot buy several results under one hold.
+`settle: terminal_presence` with `presence: {row: data.0, field: email}` for a one-item result
+array, or `presence: {field: number}` for a root result object. The fixed price is held through
+completion; an absent or empty field settles zero, and a nonempty field settles the held price.
+A missing or malformed result settles the reserve for review rather than assuming a free call.
+Validation requires `body_allowlist` and either a required one-item input array or, for a root
+result, scalar input fields, so a shared key cannot buy several results under one hold.
 
 **`per` and `unit`.** Read a block as "`value` `currency` per `per` `unit`". SpyFu bills a CPM, so
 `value: 2.00, per: 1000, unit: row` — and `cost_view` divides, serving `usd: 0.002` per row. Hunter
@@ -2217,6 +2218,21 @@ to choose (`docs/CAPABILITY-ROUTING-PLAN.md`). Everything else in the catalog st
   `{field, confirmed, confirmed_by}` and `X-Treg-Route-Confirmed` says `true` or `false`; a miss
   carries neither. A contract without `confirm`, or the header with `X-Treg-Route-Waterfall: 0`,
   is refused with a 422 before anything is held.
+  `verdict.decisive` (`people.email.verify`: `[valid, invalid]`) names the verdict words that decide
+  under `X-Treg-Route-Decisive`. With the header, an answer with any other word (unknown,
+  catch-all, risky) is kept as `weak` and the waterfall goes on, at most `MAX_WEAK_FALLBACKS` more
+  providers, each at its own price inside `X-Treg-Route-Max-Cost`. Once the first attempt has not
+  decided, the providers left are reordered by measured quality
+  (`domain/catalog/routing/quality.py`): expected net correct verdicts per call, decisive rate x
+  (2 x agreement with the other verifiers - 1), on the catch-all slice after a catch-all word and on
+  all calls otherwise; endpoints with fewer than `MIN_COMPARABLE` compared verdicts keep their price
+  order behind the rated ones, and a caller's `X-Treg-Route-Prefer` order is never reordered. The
+  numbers are read from `<route_quality_prefix><capability>/routing.json` in a private bucket an
+  operator's scorer writes (`infra/route_quality.py`, cached `route_quality_ttl_s`, a request waits
+  at most a second on a cold cache); with none configured or readable the header keeps price order.
+  When nothing decides, the first undecided answer comes back. `_treg.decision` is
+  `{decided, decided_by, ordered_by}` and `X-Treg-Route-Decided` says `true` or `false`. A contract
+  without deciding words, or the header with `X-Treg-Route-Waterfall: 0`, is refused with a 422.
 - **Adapters** — `adapters.yaml`, one per endpoint: `accepts` (identity variants), `in` (contract
   field → `queryParams.x` / `body.x`), `const` (fixed provider params), `out` (core field →
   expression over the body), `miss`, and `route: false` for an adapter that only judges hit/miss
