@@ -136,13 +136,14 @@ CONFIRM_HEADER = "x-treg-route-confirm"
 DECISIVE_HEADER = "x-treg-route-decisive"
 QUALITY_HEADER = "x-treg-route-quality"
 UPGRADE_HEADER = "x-treg-route-upgrade"
+COMPLETE_HEADER = "x-treg-route-complete"
 _DROP_FROM_CHILD = frozenset({b"content-length", b"content-type", b"transfer-encoding", b"idempotency-key",
                               b"x-treg-route-waterfall", b"x-treg-route-max-cost", b"x-treg-route-prefer",
                               b"x-treg-route-exclude", b"x-treg-route-min-results",
                               b"x-treg-route-merge", b"x-treg-route-strict-filters",
                               b"x-treg-route-verify", b"x-treg-route-confirm",
                               b"x-treg-route-decisive", b"x-treg-route-quality",
-                              b"x-treg-route-upgrade", b"host"})
+                              b"x-treg-route-upgrade", b"x-treg-route-complete", b"host"})
 _CALLER_FAULT = frozenset({400, 401, 403, 404, 405, 409, 422})
 _CANDIDATE_LOCAL_FAILURES = frozenset({"tool_access_denied", "policy_denied", "capability_pinned"})
 _GLOBAL_REFUSALS = frozenset({"insufficient_balance", "tag_spend_cap_reached",
@@ -163,6 +164,35 @@ def _free_on_failure(cand: Candidate) -> bool:
     if (cand.endpoint.get("cost") or {}).get("type") == "per_success":
         return True
     return cand.price_micro <= CHEAP_RETRY_MICRO
+
+
+def _filled(contract, core: dict) -> int:
+    """How many of the contract's output fields an answer carries."""
+    return sum(1 for k in contract.output if core.get(k) not in (None, "", [], {}))
+
+
+def _can_answer_fully(contract, adapter) -> bool:
+    """`X-Treg-Route-Complete` ranking: an adapter that maps under half the contract's output
+    fields can only ever give a thin answer, so it is asked after every adapter that can do better."""
+    return 2 * len(set(adapter.out_map) & set(contract.output)) >= len(contract.output)
+
+
+def _subject(key: str, value) -> str:
+    """A comparable form of an identity value: the profile handle for a LinkedIn URL, else the text."""
+    if key == "linkedin_url" or key.endswith("_handle"):
+        return (P.linkedin_handle(value) or str(value)).strip("/").lower()
+    return str(value).strip().lower()
+
+
+def _other_subject(contract, identity: dict, core: dict) -> str | None:
+    """The identifier an answer reports for its subject when it differs from the one asked (an
+    identity field the contract also returns), else None. A renamed profile reports its new handle,
+    a wrong match someone else's: `_complete_check` tells them apart by a second provider."""
+    for k in contract.output:
+        if k in contract.identity_types and identity.get(k) not in (None, "") and core.get(k) not in (None, ""):
+            if _subject(k, core[k]) != _subject(k, identity[k]):
+                return _subject(k, core[k])
+    return None
 
 
 def _miss_status(endpoint: dict) -> int | None:
@@ -197,6 +227,7 @@ class RouteOptions:
     decisive: bool = False   # a hit needs a deciding verdict word (`X-Treg-Route-Decisive`)
     quality: bool = False    # ask providers in order of measured answer quality (`X-Treg-Route-Quality`)
     upgrade: str | None = None  # re-ask by this identity key when the hit carries it (`X-Treg-Route-Upgrade`)
+    complete: bool = False   # only a full answer about the subject asked counts (`X-Treg-Route-Complete`, see `_complete_check`)
 
     @classmethod
     def from_headers(cls, get, default_max_cost_micro: int | None = None) -> "RouteOptions":
@@ -222,12 +253,13 @@ class RouteOptions:
         dc = str(get(DECISIVE_HEADER) or "").strip().lower()
         ql = str(get(QUALITY_HEADER) or "").strip().lower()
         up = str(get(UPGRADE_HEADER) or "").strip()
+        cp = str(get(COMPLETE_HEADER) or "").strip().lower()
         return cls(waterfall=wf not in ("0", "false", "no", "off"),
                    max_cost_micro=max_cost, prefer=_list(get(PREFER_HEADER)), exclude=_list(get(EXCLUDE_HEADER)),
                    min_results=mr, merge=mg in ("1", "true", "yes", "on"), strict_filters=sf in ("1", "true", "yes", "on"),
                    verify=vf in ("1", "true", "yes", "on"), confirm=cf in ("1", "true", "yes", "on"),
                    decisive=dc in ("1", "true", "yes", "on"), quality=ql in ("1", "true", "yes", "on"),
-                   upgrade=up or None)
+                   upgrade=up or None, complete=cp in ("1", "true", "yes", "on"))
 
 
 class _Bytes:
@@ -423,10 +455,12 @@ async def build_plan(ep: dict, identity_given: dict, caller, options: RouteOptio
             else:
                 kept.append(c)
         cands = kept
-    return Plan(contract=contract, identity=identity, variant=variant,
-                candidates=rank(cands, prefer=options.prefer or list(contract.prefer), exclude=options.exclude,
-                                given=given, derive=contract.derive,
-                                one_subject=contract.one_subject), dropped=dropped)
+    ranked = rank(cands, prefer=options.prefer or list(contract.prefer), exclude=options.exclude,
+                  given=given, derive=contract.derive, one_subject=contract.one_subject)
+    if options.complete:  # stable: price order within each group
+        ranked = [c for c in ranked if _can_answer_fully(contract, c.adapter)] + \
+                 [c for c in ranked if not _can_answer_fully(contract, c.adapter)]
+    return Plan(contract=contract, identity=identity, variant=variant, candidates=ranked, dropped=dropped)
 
 
 def _child_input(parent, ep: dict, query: dict[str, str], body: dict,
@@ -594,6 +628,7 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
     answers: list[tuple] = []      # every attempt that returned rows, for X-Treg-Route-Merge
     weak_hits = 0
     best: tuple[int, tuple[Candidate, dict, dict, bytes]] | None = None   # best WEAK answer seen
+    other_subject: list[tuple[str, tuple]] = []   # X-Treg-Route-Complete: answers about another identifier, never returned unconfirmed
     cost_capped = False            # true when any candidate was skipped due to max-cost ceiling
     unconfirmed: list[tuple[str, tuple]] = []   # X-Treg-Route-Confirm: hits waiting for a second provider
     confirmed_by: str | None = None
@@ -864,9 +899,33 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
         # far is kept, so a weak first provider can still win if nothing better turns up.
         n_rows = max((len(v) for v in core.values() if isinstance(v, list)), default=1)
         weak = options.waterfall and n_rows < options.min_results
-        tried.append(Attempt(cand.endpoint["id"], cand.endpoint["provider"], "weak" if weak else "hit",
-                             response.status, charged, f"{n_rows} < min_results {options.min_results}" if weak else "",
-                             ignored=ignored))
+        # `X-Treg-Route-Complete`: an answer carrying under half the contract's output fields is
+        # weak like a short list (the fullest one wins if nothing better turns up), and an answer
+        # whose subject identifier differs from the one asked waits for another provider to report
+        # the same identifier: a renamed profile is confirmed, a match on someone else is not.
+        thin = other = None
+        if options.complete and options.waterfall and not weak:
+            n_filled = _filled(plan.contract, core)
+            if 2 * n_filled < len(plan.contract.output):
+                thin, n_rows = f"{n_filled} of {len(plan.contract.output)} output fields", n_filled
+            else:
+                other = _other_subject(plan.contract, plan.identity, core)
+        detail = (f"{n_rows} < min_results {options.min_results}" if weak else f"thin answer: {thin}" if thin
+                  else "reports another subject; needs a second provider" if other else "")
+        tried.append(Attempt(cand.endpoint["id"], cand.endpoint["provider"], "weak" if weak or thin or other else "hit",
+                             response.status, charged, detail, ignored=ignored))
+        if other is not None:
+            agreed = next((h for v, h in other_subject if v == other
+                           and h[0].endpoint["provider"] != cand.endpoint["provider"]), None)
+            if agreed is None:
+                other_subject.append((other, (cand, doc, core, raw)))
+                if len(other_subject) > MAX_WEAK_FALLBACKS:
+                    break
+                continue
+            answers.append(agreed)
+            winner = agreed
+            break
+        weak = weak or thin is not None
         if weak:
             if best is None or n_rows > best[0]:
                 best = (n_rows, (cand, doc, core, raw))
