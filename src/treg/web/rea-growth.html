@@ -460,6 +460,7 @@
 
   /* REA-Growth hero: the growth curve is the hero; moves pinned on it as it draws */
   .xr { --paper: #FDFCFB; --ink: #101010; --hot: #118453; --mint: #45E39E; --line: #E9E7E2; --muted: #8A8885; position: relative; isolation: isolate; overflow: hidden; min-height: max(760px, 100svh); box-sizing: border-box; background: var(--paper); color: var(--ink); padding: 120px 24px 0; }
+  .xr { background: radial-gradient(70% 42% at 50% 0%, rgba(69,227,158,.18), transparent 72%), radial-gradient(40% 30% at 85% 8%, rgba(17,132,83,.07), transparent 70%), linear-gradient(180deg, #EBF5EF 0%, #F5FAF6 38%, #FDFCFB 78%); }
   .xr-curve { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; overflow: visible; }
   .xr-line { fill: none; stroke: var(--hot); stroke-width: 3.5; vector-effect: non-scaling-stroke; stroke-linecap: round; filter: drop-shadow(0 6px 14px rgba(17,132,83,.45)); }
   .xr-reveal { transform-box: fill-box; transform-origin: 0 0; transform: scaleX(0); animation: xrdraw 2.6s cubic-bezier(.45,0,.35,1) .5s forwards; }
@@ -1026,6 +1027,7 @@
       var pins = [].slice.call(hero.querySelectorAll('.xr-pin')).filter(function (p) { return phone || !p.classList.contains('sm-only'); });
       var keep = [hero.querySelector('.xr-cta').getBoundingClientRect(), hero.querySelector('.xr-t').getBoundingClientRect(), hero.querySelector('.xr-eye').getBoundingClientRect()];
       var now = hero.querySelector('.xr-now span'); if (now && !phone) keep.push(now.getBoundingClientRect());
+      pins.forEach(function (p) { var o = p.getBoundingClientRect(); keep.push({ left: o.left - 8, right: o.left + 8, top: o.top - 8, bottom: o.top + 8 }); });
       pins.sort(function (a, b) { return (b.classList.contains('key') - a.classList.contains('key')) || (+a.dataset.m - +b.dataset.m); });
       pins.forEach(function (p) {
         p.style.visibility = '';
