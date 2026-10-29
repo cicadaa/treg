@@ -495,14 +495,14 @@
   .xr-eye .ag img { width: 1.2em; height: 1.2em; border-radius: .26em; object-fit: contain; transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
   .xr-eye .ag img:hover { transform: translateY(-3px) rotate(-6deg); }
   .xr-t { margin: 0 auto; max-width: 1100px; font: 600 clamp(44px, 6.6vw, 100px)/1.02 "Inter Tight", var(--ui); letter-spacing: -.05em; color: var(--ink); -webkit-text-fill-color: var(--ink); background: none; text-wrap: balance; }
-  .xr-t .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .1em; }
+  .xr-t .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .1em .3em; margin: 0 -.1em -.3em; }
   .xr-t .w > span { display: inline-block; transform: translateY(105%); animation: xrrise .9s cubic-bezier(.2,.9,.1,1) .15s forwards; }
   .xr-t .w + .w > span { animation-delay: .27s; }
   @keyframes xrrise { to { transform: none; } }
-  .xr-rot { position: relative; display: inline-block; height: 1.24em; vertical-align: top; overflow: hidden; margin: -.05em 0 -.12em; transition: width .5s cubic-bezier(.65,0,.35,1); }
-  .xr-b { position: absolute; left: 0; top: .05em; display: inline-flex; align-items: baseline; gap: .16em; line-height: 1.02; white-space: nowrap; color: var(--hot); -webkit-text-fill-color: var(--hot); opacity: 0; transform: translateY(100%); transition: opacity .45s, transform .6s cubic-bezier(.65,0,.35,1); }
+  .xr-rot { position: relative; display: inline-block; height: 1.12em; vertical-align: top; transition: width .5s cubic-bezier(.65,0,.35,1); }
+  .xr-b { position: absolute; left: 0; top: .05em; display: inline-flex; align-items: baseline; gap: .16em; line-height: 1.02; white-space: nowrap; color: var(--hot); -webkit-text-fill-color: var(--hot); opacity: 0; transform: translateY(35%); transition: opacity .45s, transform .6s cubic-bezier(.65,0,.35,1); }
   .xr-b.on { opacity: 1; transform: none; }
-  .xr-b.out { opacity: 0; transform: translateY(-100%); }
+  .xr-b.out { opacity: 0; transform: translateY(-35%); }
   .xr-b img.tile { padding: 0; }
   .xr-b img { position: relative; top: .06em; width: .74em; height: .74em; padding: .07em; box-sizing: border-box; border-radius: .2em; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 10px 24px -14px rgba(16,16,16,.35); }
   .xr-cta { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 34px; opacity: 0; animation: xrfade .6s ease .6s forwards; }
@@ -516,7 +516,7 @@
     .xr *, .xr *::before, .xr *::after { animation-duration: .01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
   }
   @media (max-width: 760px) {
-    .xr-t { font-size: 10.6vw; white-space: nowrap; } .xr-eye { font-size: 6.4vw; white-space: nowrap; }
+    .xr-t { font-size: 9.2vw; white-space: nowrap; } .xr-eye { font-size: 6.4vw; white-space: nowrap; }
     .xr { min-height: 720px; padding: 104px 16px 0; }
           .xr-pin, .xr-hair, .xr-now span, .xr-ticks span:nth-child(2), .xr-ticks span:nth-child(4) { display: none; }
     .xr-pin b { font-size: 10.5px; }
@@ -698,7 +698,10 @@
     .xr-ticks { bottom: 6px; } .xr-ticks span { white-space: nowrap; } .xr-ticks span:first-child { display: none; }
     .rdemo .ln .tx { display: none; }
     .xr-k { text-wrap: balance; }
-    .xr-pin.key { display: block; } .xr-pin.key > span { height: 64px; }
+    .xr-pin.key, .xr-pin.m { display: block; }
+    .xr-pin b { font-size: 10.5px; padding: 4px 7px; }
+    .xr-pin em { display: none; }
+    .xr-pin.mflip > span { left: auto; right: 0; padding: 0 9px 0 0; flex-direction: row-reverse; box-shadow: inset -1.5px 0 0 rgba(16,16,16,.55); }
     .xr-run { padding: 48px 16px 8px; } .xr-k { font-size: 26px; margin-bottom: 18px; }
     .rd-strip { font-size: 12px; gap: 8px; padding: 13px 14px; min-height: 46px; } .rd-strip img { width: 20px; height: 20px; }
     .rd-body { flex-direction: column; }
@@ -715,6 +718,8 @@
     .bp-rc { margin-top: 28px; }
     #prompt.final { padding-bottom: 64px; }
   }
+  @media (max-width: 360px) { .nav { padding: 12px 16px; } .wordmark { white-space: nowrap; font-size: 14px; gap: 8px; } .nav .pill { white-space: nowrap; padding: 9px 14px; font-size: 13px; } .xr-cta { gap: 8px; } .xr-btn, .xr-link { white-space: nowrap; padding: 12px 16px; font-size: 14px; } }
+  @media (max-width: 760px) { .xr-pin b { position: relative; z-index: 3; } }
 </style>
 <script src="/captcha.js" defer></script>
 </head>
@@ -734,7 +739,7 @@
     <path class="xr-fill" clip-path="url(#xrClip)" d="M-20.0,959.8 C-11.7,959.8 3.5,960.4 30.0,959.8 C56.5,959.2 102.8,959.1 139.2,956.3 C175.6,953.5 212.0,954.3 248.4,943.0 C284.8,931.8 321.2,903.7 357.6,888.8 C394.0,874.0 430.4,864.6 466.8,854.1 C503.2,843.6 539.6,848.0 576.0,825.7 C612.4,803.4 642.7,759.0 685.2,720.3 C727.7,681.6 788.3,599.3 830.8,593.6 C873.3,588.0 921.8,670.9 940.0,686.4 L940.0,1000 L-20,1000 Z"/>
     <path class="xr-line" id="xrLine" clip-path="url(#xrClip)" d="M-20.0,959.8 C-11.7,959.8 3.5,960.4 30.0,959.8 C56.5,959.2 102.8,959.1 139.2,956.3 C175.6,953.5 212.0,954.3 248.4,943.0 C284.8,931.8 321.2,903.7 357.6,888.8 C394.0,874.0 430.4,864.6 466.8,854.1 C503.2,843.6 539.6,848.0 576.0,825.7 C612.4,803.4 642.7,759.0 685.2,720.3 C727.7,681.6 788.3,599.3 830.8,593.6 C873.3,588.0 921.8,670.9 940.0,686.4"/>
   </svg>
-  <div class="xr-pins" aria-hidden="true"><div class="xr-pin " data-m="3" style="--h:56px;z-index:944"><i></i><span><b>Supabase integration</b><em>Dec 24</em></span></div><div class="xr-pin " data-m="4" style="--h:120px;z-index:880"><i></i><span><img src="logos/x-mono.svg" alt=""><b>X Ads switched on</b><em>Jan 25</em></span></div><div class="xr-pin key" data-m="5" style="--h:184px;z-index:816"><i></i><span><b>A badge on every app built</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="5.4" style="--h:88px;z-index:912"><i></i><span><b>$15M round · “0 → $17M ARR”</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="6" style="--h:152px;z-index:848"><i></i><span><img src="media/aeo/logos/reddit.png" alt=""><b>Reddit Ads</b><em>Mar 25</em></span></div><div class="xr-pin sm-hide" data-m="7" style="--h:216px;z-index:784"><i></i><span><img src="logos/tiktok.svg" alt=""><b>TikTok pixel</b><em>Apr 25</em></span></div><div class="xr-pin sm-hide" data-m="10" style="--h:70px;z-index:930"><i></i><span><b>$200M Series A</b><em>Jul 25</em></span></div><div class="xr-pin sm-hide" data-m="15" style="--h:96px;z-index:904"><i></i><span><b>$330M at $6.6B</b><em>Dec 25</em></span></div><div class="xr-pin " data-m="21" style="--h:110px;z-index:890"><i></i><span><b>$500M run rate, reported</b><em>Jun 26</em></span></div><div class="xr-now" data-m="25"><i></i><span>194K visits / mo</span></div></div>
+  <div class="xr-pins" aria-hidden="true"><div class="xr-pin " data-m="3" style="--h:56px;z-index:944"><i></i><span><b>Supabase integration</b><em>Dec 24</em></span></div><div class="xr-pin " data-m="4" style="--h:120px;z-index:880"><i></i><span><img src="logos/x-mono.svg" alt=""><b>X Ads switched on</b><em>Jan 25</em></span></div><div class="xr-pin key" data-m="5" style="--h:184px;z-index:816"><i></i><span><b>A badge on every app built</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="5.4" style="--h:88px;z-index:912"><i></i><span><b>$15M round · “0 → $17M ARR”</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="6" style="--h:152px;z-index:848"><i></i><span><img src="media/aeo/logos/reddit.png" alt=""><b>Reddit Ads</b><em>Mar 25</em></span></div><div class="xr-pin sm-hide" data-m="7" style="--h:216px;z-index:784"><i></i><span><img src="logos/tiktok.svg" alt=""><b>TikTok pixel</b><em>Apr 25</em></span></div><div class="xr-pin sm-hide m" data-m="10" style="--h:70px;z-index:930"><i></i><span><b>$200M Series A</b><em>Jul 25</em></span></div><div class="xr-pin sm-hide" data-m="15" style="--h:96px;z-index:904"><i></i><span><b>$330M at $6.6B</b><em>Dec 25</em></span></div><div class="xr-pin  m mflip" data-m="21" style="--h:110px;z-index:890"><i></i><span><b>$500M run rate, reported</b><em>Jun 26</em></span></div><div class="xr-now" data-m="25"><i></i><span>194K visits / mo</span></div></div>
   <div class="xr-ticks" aria-hidden="true"><span style="left:3.00%">Sep 24</span><span style="left:17.56%">Jan 25</span><span style="left:35.76%">Jun 25</span><span style="left:61.24%">Jan 26</span><span style="left:94.00%">Oct 26</span></div>
   <div class="xr-hair" id="xrHair" aria-hidden="true"><i></i><span id="xrRead"></span></div>
   <div class="xr-in">
@@ -961,6 +966,23 @@
     ev.preventDefault(); t.scrollIntoView();
   });
 
+
+  /* phones: three pins, each label lifted to its own row under the buttons */
+  (function () {
+    var mq = matchMedia('(max-width: 760px)'), hero = $('top');
+    function lay() {
+      var pins = [].slice.call(hero.querySelectorAll('.xr-pin.key, .xr-pin.m'));
+      pins.forEach(function (p) { p.querySelector('span').style.height = ''; });
+      if (!mq.matches) return;
+      var floor = hero.querySelector('.xr-cta').getBoundingClientRect().bottom + 16, row = 34;
+      pins.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; })
+        .forEach(function (p, i) {
+          var dot = p.getBoundingClientRect().top, want = floor + i * row + 20;
+          p.querySelector('span').style.height = Math.max(36, dot - want) + 'px';
+        });
+    }
+    lay(); addEventListener('resize', lay); if (document.fonts) document.fonts.ready.then(lay);
+  })();
   /* hero: the company name and logo rotate */
   (function () {
     var rot = $('xrRot'); if (!rot) return;
