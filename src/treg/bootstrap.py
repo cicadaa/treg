@@ -776,6 +776,9 @@ def _lifespan(role: AppRole):
                 logging.getLogger("treg").warning("event=route_quality_disabled", exc_info=True)
                 quality_reader = None
             routed_call.configure_route_quality_reader(quality_reader)
+            if quality_reader is not None:
+                from .domain.catalog import store as catalog_store
+                quality_reader.warm(catalog_store.load().contracts)
             mcp_reader_bound = role != "control" and _mcp is not None
             if mcp_reader_bound:
                 _mcp.configure_endpoint_observation_reader(endpoint_observations)
