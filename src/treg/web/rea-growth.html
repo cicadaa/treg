@@ -698,10 +698,7 @@
     .xr-ticks { bottom: 6px; } .xr-ticks span { white-space: nowrap; } .xr-ticks span:first-child { display: none; }
     .rdemo .ln .tx { display: none; }
     .xr-k { text-wrap: balance; }
-    .xr-pin.key, .xr-pin.m { display: block; }
-    .xr-pin b { font-size: 10.5px; padding: 4px 7px; }
     .xr-pin em { display: none; }
-    .xr-pin.mflip > span { left: auto; right: 0; padding: 0 9px 0 0; flex-direction: row-reverse; box-shadow: inset -1.5px 0 0 rgba(16,16,16,.55); }
     .xr-run { padding: 48px 16px 8px; } .xr-k { font-size: 26px; margin-bottom: 18px; }
     .rd-strip { font-size: 12px; gap: 8px; padding: 13px 14px; min-height: 46px; } .rd-strip img { width: 20px; height: 20px; }
     .rd-body { flex-direction: column; }
@@ -719,7 +716,19 @@
     #prompt.final { padding-bottom: 64px; }
   }
   @media (max-width: 360px) { .nav { padding: 12px 16px; } .wordmark { white-space: nowrap; font-size: 14px; gap: 8px; } .nav .pill { white-space: nowrap; padding: 9px 14px; font-size: 13px; } .xr-cta { gap: 8px; } .xr-btn, .xr-link { white-space: nowrap; padding: 12px 16px; font-size: 14px; } }
-  @media (max-width: 760px) { .xr-pin b { position: relative; z-index: 3; } }
+  /* phones: every move as a small logo on the curve, no labels */
+  .xr-pin .ic { display: none; }
+  @media (max-width: 760px) {
+    .xr .xr-pin, .xr .xr-pin.sm-hide { display: block; }
+    .xr-pin > span { display: none; }
+    .xr-pin > i { width: 8px; height: 8px; left: -4px; top: -4px; box-shadow: 0 0 0 2px #101010; }
+    .xr-pin .ic { display: grid; place-items: center; position: absolute; left: -11px; bottom: calc(10px + var(--lv) * 28px); width: 22px; height: 22px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px #E4E1DA, 0 4px 10px -4px rgba(16,16,16,.3); opacity: 0; animation: xrfade .35s ease calc(var(--d) + .2s) forwards; }
+    .xr-pin .ic::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: calc(var(--lv) * 28px + 6px); background: rgba(16,16,16,.35); }
+    .xr-pin .ic img { width: 14px; height: 14px; object-fit: contain; }
+    .xr-pin .ic.usd b { font: 700 12px var(--ui); color: #fff; }
+    .xr-pin .ic.usd { background: #101010; box-shadow: none; }
+    .xr-pin.key .ic { box-shadow: 0 0 0 2px #118453, 0 4px 10px -4px rgba(16,16,16,.3); }
+  }
 </style>
 <script src="/captcha.js" defer></script>
 </head>
@@ -739,7 +748,7 @@
     <path class="xr-fill" clip-path="url(#xrClip)" d="M-20.0,959.8 C-11.7,959.8 3.5,960.4 30.0,959.8 C56.5,959.2 102.8,959.1 139.2,956.3 C175.6,953.5 212.0,954.3 248.4,943.0 C284.8,931.8 321.2,903.7 357.6,888.8 C394.0,874.0 430.4,864.6 466.8,854.1 C503.2,843.6 539.6,848.0 576.0,825.7 C612.4,803.4 642.7,759.0 685.2,720.3 C727.7,681.6 788.3,599.3 830.8,593.6 C873.3,588.0 921.8,670.9 940.0,686.4 L940.0,1000 L-20,1000 Z"/>
     <path class="xr-line" id="xrLine" clip-path="url(#xrClip)" d="M-20.0,959.8 C-11.7,959.8 3.5,960.4 30.0,959.8 C56.5,959.2 102.8,959.1 139.2,956.3 C175.6,953.5 212.0,954.3 248.4,943.0 C284.8,931.8 321.2,903.7 357.6,888.8 C394.0,874.0 430.4,864.6 466.8,854.1 C503.2,843.6 539.6,848.0 576.0,825.7 C612.4,803.4 642.7,759.0 685.2,720.3 C727.7,681.6 788.3,599.3 830.8,593.6 C873.3,588.0 921.8,670.9 940.0,686.4"/>
   </svg>
-  <div class="xr-pins" aria-hidden="true"><div class="xr-pin " data-m="3" style="--h:56px;z-index:944"><i></i><span><b>Supabase integration</b><em>Dec 24</em></span></div><div class="xr-pin " data-m="4" style="--h:120px;z-index:880"><i></i><span><img src="logos/x-mono.svg" alt=""><b>X Ads switched on</b><em>Jan 25</em></span></div><div class="xr-pin key" data-m="5" style="--h:184px;z-index:816"><i></i><span><b>A badge on every app built</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="5.4" style="--h:88px;z-index:912"><i></i><span><b>$15M round · “0 → $17M ARR”</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="6" style="--h:152px;z-index:848"><i></i><span><img src="media/aeo/logos/reddit.png" alt=""><b>Reddit Ads</b><em>Mar 25</em></span></div><div class="xr-pin sm-hide" data-m="7" style="--h:216px;z-index:784"><i></i><span><img src="logos/tiktok.svg" alt=""><b>TikTok pixel</b><em>Apr 25</em></span></div><div class="xr-pin sm-hide m" data-m="10" style="--h:70px;z-index:930"><i></i><span><b>$200M Series A</b><em>Jul 25</em></span></div><div class="xr-pin sm-hide" data-m="15" style="--h:96px;z-index:904"><i></i><span><b>$330M at $6.6B</b><em>Dec 25</em></span></div><div class="xr-pin  m mflip" data-m="21" style="--h:110px;z-index:890"><i></i><span><b>$500M run rate, reported</b><em>Jun 26</em></span></div><div class="xr-now" data-m="25"><i></i><span>194K visits / mo</span></div></div>
+  <div class="xr-pins" aria-hidden="true"><div class="xr-pin " data-m="3" style="--h:56px;z-index:944"><div class="ic img" style="--lv:0"><img src="media/growth-rea/brands/supabase.svg" alt=""></div><i></i><span><b>Supabase integration</b><em>Dec 24</em></span></div><div class="xr-pin " data-m="4" style="--h:120px;z-index:880"><div class="ic img" style="--lv:1"><img src="logos/x-mono.svg" alt=""></div><i></i><span><img src="logos/x-mono.svg" alt=""><b>X Ads switched on</b><em>Jan 25</em></span></div><div class="xr-pin key" data-m="5" style="--h:184px;z-index:816"><div class="ic img" style="--lv:2"><img src="media/growth-rea/brands/lovable.svg" alt=""></div><i></i><span><b>A badge on every app built</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="5.4" style="--h:88px;z-index:912"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$15M round · “0 → $17M ARR”</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="6" style="--h:152px;z-index:848"><div class="ic img" style="--lv:1"><img src="media/aeo/logos/reddit.png" alt=""></div><i></i><span><img src="media/aeo/logos/reddit.png" alt=""><b>Reddit Ads</b><em>Mar 25</em></span></div><div class="xr-pin sm-hide" data-m="7" style="--h:216px;z-index:784"><div class="ic img" style="--lv:2"><img src="logos/tiktok.svg" alt=""></div><i></i><span><img src="logos/tiktok.svg" alt=""><b>TikTok pixel</b><em>Apr 25</em></span></div><div class="xr-pin sm-hide" data-m="10" style="--h:70px;z-index:930"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$200M Series A</b><em>Jul 25</em></span></div><div class="xr-pin sm-hide" data-m="15" style="--h:96px;z-index:904"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$330M at $6.6B</b><em>Dec 25</em></span></div><div class="xr-pin " data-m="21" style="--h:110px;z-index:890"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$500M run rate, reported</b><em>Jun 26</em></span></div><div class="xr-now" data-m="25"><i></i><span>194K visits / mo</span></div></div>
   <div class="xr-ticks" aria-hidden="true"><span style="left:3.00%">Sep 24</span><span style="left:17.56%">Jan 25</span><span style="left:35.76%">Jun 25</span><span style="left:61.24%">Jan 26</span><span style="left:94.00%">Oct 26</span></div>
   <div class="xr-hair" id="xrHair" aria-hidden="true"><i></i><span id="xrRead"></span></div>
   <div class="xr-in">
@@ -1005,31 +1014,6 @@
       hair.classList.add('on');
     });
     hero.addEventListener('mouseleave', function () { hair.classList.remove('on'); });
-  })();
-  /* phones: three pins, each label lifted to its own row under the buttons; the hero grows if the curve sits too high for them */
-  (function () {
-    var mq = matchMedia('(max-width: 760px)'), hero = $('top'), ROW = 34, STEM = 36;
-    function lay() {
-      var pins = [].slice.call(hero.querySelectorAll('.xr-pin.key, .xr-pin.m'));
-      pins.forEach(function (p) { p.querySelector('span').style.height = ''; });
-      hero.style.minHeight = '';
-      if (!mq.matches) return;
-      var top = hero.getBoundingClientRect().top, H = hero.offsetHeight,
-          floor = hero.querySelector('.xr-cta').getBoundingClientRect().bottom - top + 16;
-      pins.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; });
-      // a dot's height in the hero scales with the hero, so grow it until every label has its row above its dot
-      var need = H;
-      pins.forEach(function (p, i) {
-        var f = (p.getBoundingClientRect().top - top) / H;
-        need = Math.max(need, Math.ceil((floor + i * ROW + 20 + STEM) / f));
-      });
-      if (need > H) { hero.style.minHeight = need + 'px'; H = need; }
-      pins.forEach(function (p, i) {
-        var dot = p.getBoundingClientRect().top - top;
-        p.querySelector('span').style.height = Math.max(STEM, dot - (floor + i * ROW + 20)) + 'px';
-      });
-    }
-    lay(); addEventListener('resize', lay); addEventListener('load', lay); if (document.fonts) document.fonts.ready.then(lay);
   })();
   /* hero demo: the Lovable run, replayed. Calls and costs are the run's own (rea-growth.md, method notes) */
   (function () {
