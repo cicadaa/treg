@@ -967,22 +967,6 @@
   });
 
 
-  /* phones: three pins, each label lifted to its own row under the buttons */
-  (function () {
-    var mq = matchMedia('(max-width: 760px)'), hero = $('top');
-    function lay() {
-      var pins = [].slice.call(hero.querySelectorAll('.xr-pin.key, .xr-pin.m'));
-      pins.forEach(function (p) { p.querySelector('span').style.height = ''; });
-      if (!mq.matches) return;
-      var floor = hero.querySelector('.xr-cta').getBoundingClientRect().bottom + 16, row = 34;
-      pins.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; })
-        .forEach(function (p, i) {
-          var dot = p.getBoundingClientRect().top, want = floor + i * row + 20;
-          p.querySelector('span').style.height = Math.max(36, dot - want) + 'px';
-        });
-    }
-    lay(); addEventListener('resize', lay); if (document.fonts) document.fonts.ready.then(lay);
-  })();
   /* hero: the company name and logo rotate */
   (function () {
     var rot = $('xrRot'); if (!rot) return;
@@ -1021,6 +1005,22 @@
       hair.classList.add('on');
     });
     hero.addEventListener('mouseleave', function () { hair.classList.remove('on'); });
+  })();
+  /* phones: three pins, each label lifted to its own row under the buttons */
+  (function () {
+    var mq = matchMedia('(max-width: 760px)'), hero = $('top');
+    function lay() {
+      var pins = [].slice.call(hero.querySelectorAll('.xr-pin.key, .xr-pin.m'));
+      pins.forEach(function (p) { p.querySelector('span').style.height = ''; });
+      if (!mq.matches) return;
+      var floor = hero.querySelector('.xr-cta').getBoundingClientRect().bottom + 16, row = 34;
+      pins.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; })
+        .forEach(function (p, i) {
+          var dot = p.getBoundingClientRect().top, want = floor + i * row + 20;
+          p.querySelector('span').style.height = Math.max(36, dot - want) + 'px';
+        });
+    }
+    lay(); addEventListener('resize', lay); addEventListener('load', lay); if (document.fonts) document.fonts.ready.then(lay);
   })();
   /* hero demo: the Lovable run, replayed. Calls and costs are the run's own (rea-growth.md, method notes) */
   (function () {
