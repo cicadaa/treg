@@ -4125,7 +4125,7 @@ async def jev_xboost_judge(request: Request, db: AsyncSession = Depends(get_sess
 # chronological (newest first), not alphabetical.
 _BLOG_LAUNCHES: list[tuple[str, str, str, str]] = [
     # (slug, title, date, one-line blurb)
-    ("/rea-growth", "REA for Growth", "2026-10-23",
+    ("/rea-growth", "REA for Growth", "2026-10-29",
      "Name a company; your agent takes its distribution apart and hands you plays to copy."),
     ("/aeo", "How to Get AI to Recommend Your Product", "2026-10-17",
      "Four steps and one prompt: what customers ask, who AI recommends, the sites it cites, getting on them."),
