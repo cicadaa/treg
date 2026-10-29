@@ -171,9 +171,21 @@ def _filled(contract, core: dict) -> int:
     return sum(1 for k in contract.output if core.get(k) not in (None, "", [], {}))
 
 
+def _thin(contract, core: dict) -> str | None:
+    """`X-Treg-Route-Complete`: why an answer is too thin to end the route, else None. The
+    contract's `complete` fields when it names them, else more than half of its output."""
+    if contract.complete:
+        missing = [k for k in contract.complete if core.get(k) in (None, "", [], {})]
+        return f"no {', '.join(missing)}" if missing else None
+    n = _filled(contract, core)
+    return f"{n} of {len(contract.output)} output fields" if 2 * n < len(contract.output) else None
+
+
 def _can_answer_fully(contract, adapter) -> bool:
-    """`X-Treg-Route-Complete` ranking: an adapter that maps under half the contract's output
-    fields can only ever give a thin answer, so it is asked after every adapter that can do better."""
+    """`X-Treg-Route-Complete` ranking: an adapter that cannot map what a complete answer carries
+    can only ever give a thin one, so it is asked after every adapter that can do better."""
+    if contract.complete:
+        return all(k in adapter.out_map for k in contract.complete)
     return 2 * len(set(adapter.out_map) & set(contract.output)) >= len(contract.output)
 
 
@@ -905,9 +917,9 @@ async def _run_routed(parent: CallContext, ep: dict, body_bytes: bytes, get_head
         # the same identifier: a renamed profile is confirmed, a match on someone else is not.
         thin = other = None
         if options.complete and options.waterfall and not weak:
-            n_filled = _filled(plan.contract, core)
-            if 2 * n_filled < len(plan.contract.output):
-                thin, n_rows = f"{n_filled} of {len(plan.contract.output)} output fields", n_filled
+            thin = _thin(plan.contract, core)
+            if thin:
+                n_rows = _filled(plan.contract, core)   # the fullest weak answer wins
             else:
                 other = _other_subject(plan.contract, plan.identity, core)
         detail = (f"{n_rows} < min_results {options.min_results}" if weak else f"thin answer: {thin}" if thin
