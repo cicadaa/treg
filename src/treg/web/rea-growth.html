@@ -1006,19 +1006,28 @@
     });
     hero.addEventListener('mouseleave', function () { hair.classList.remove('on'); });
   })();
-  /* phones: three pins, each label lifted to its own row under the buttons */
+  /* phones: three pins, each label lifted to its own row under the buttons; the hero grows if the curve sits too high for them */
   (function () {
-    var mq = matchMedia('(max-width: 760px)'), hero = $('top');
+    var mq = matchMedia('(max-width: 760px)'), hero = $('top'), ROW = 34, STEM = 36;
     function lay() {
       var pins = [].slice.call(hero.querySelectorAll('.xr-pin.key, .xr-pin.m'));
       pins.forEach(function (p) { p.querySelector('span').style.height = ''; });
+      hero.style.minHeight = '';
       if (!mq.matches) return;
-      var floor = hero.querySelector('.xr-cta').getBoundingClientRect().bottom + 16, row = 34;
-      pins.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; })
-        .forEach(function (p, i) {
-          var dot = p.getBoundingClientRect().top, want = floor + i * row + 20;
-          p.querySelector('span').style.height = Math.max(36, dot - want) + 'px';
-        });
+      var top = hero.getBoundingClientRect().top, H = hero.offsetHeight,
+          floor = hero.querySelector('.xr-cta').getBoundingClientRect().bottom - top + 16;
+      pins.sort(function (a, b) { return a.getBoundingClientRect().top - b.getBoundingClientRect().top; });
+      // a dot's height in the hero scales with the hero, so grow it until every label has its row above its dot
+      var need = H;
+      pins.forEach(function (p, i) {
+        var f = (p.getBoundingClientRect().top - top) / H;
+        need = Math.max(need, Math.ceil((floor + i * ROW + 20 + STEM) / f));
+      });
+      if (need > H) { hero.style.minHeight = need + 'px'; H = need; }
+      pins.forEach(function (p, i) {
+        var dot = p.getBoundingClientRect().top - top;
+        p.querySelector('span').style.height = Math.max(STEM, dot - (floor + i * ROW + 20)) + 'px';
+      });
     }
     lay(); addEventListener('resize', lay); addEventListener('load', lay); if (document.fonts) document.fonts.ready.then(lay);
   })();
