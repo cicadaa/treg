@@ -484,7 +484,7 @@
   .xr-ticks { position: absolute; left: 0; right: 0; bottom: 16px; height: 14px; z-index: 1; }
   .xr-ticks span { position: absolute; transform: translateX(-50%); font: 500 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: rgba(16,16,16,.45); }
   .xr-ticks span:first-child { transform: none; } .xr-ticks span:last-child { transform: translateX(-100%); }
-  .xr-hair { position: absolute; top: 0; bottom: 0; left: 0; z-index: 3; width: 1px; background: rgba(16,16,16,.35); pointer-events: none; opacity: 0; transition: opacity .2s, transform .18s cubic-bezier(.2,.8,.2,1); }
+  .xr-hair { position: absolute; top: 0; bottom: 30px; left: 0; z-index: 3; width: 1px; background: linear-gradient(rgba(16,16,16,.4), rgba(16,16,16,.08)); pointer-events: none; opacity: 0; transition: opacity .2s, transform .18s cubic-bezier(.2,.8,.2,1), top .18s cubic-bezier(.2,.8,.2,1); }
   .xr-hair.on { opacity: 1; }
   .xr-hair i { position: absolute; left: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); border: 3px solid var(--paper); box-sizing: content-box; margin: -9px 0 0 -3px; transition: top .18s cubic-bezier(.2,.8,.2,1); }
   .xr-hair span { position: absolute; left: 12px; padding: 7px 10px; border-radius: 8px; background: var(--ink); color: #fff; font: 500 12px var(--mono); white-space: nowrap; transition: top .18s cubic-bezier(.2,.8,.2,1); }
@@ -494,7 +494,7 @@
   .xr-eye .ag { display: inline-flex; gap: .12em; }
   .xr-eye .ag img { width: 1.2em; height: 1.2em; border-radius: .26em; object-fit: contain; transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
   .xr-eye .ag img:hover { transform: translateY(-3px) rotate(-6deg); }
-  .xr-t { margin: 0 auto; max-width: 1100px; font: 600 clamp(44px, 6.6vw, 100px)/1.02 "Inter Tight", var(--ui); letter-spacing: -.05em; color: var(--ink); -webkit-text-fill-color: var(--ink); background: none; text-wrap: balance; }
+  .xr-t { margin: 0 auto; max-width: 1100px; font: 600 clamp(40px, 5.6vw, 84px)/1.02 "Inter Tight", var(--ui); white-space: nowrap; letter-spacing: -.05em; color: var(--ink); -webkit-text-fill-color: var(--ink); background: none; text-wrap: balance; }
   .xr-t .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .1em .3em; margin: 0 -.1em -.3em; }
   .xr-t .w > span { display: inline-block; transform: translateY(105%); animation: xrrise .9s cubic-bezier(.2,.9,.1,1) .15s forwards; }
   .xr-t .w + .w > span { animation-delay: .27s; }
@@ -516,7 +516,7 @@
     .xr *, .xr *::before, .xr *::after { animation-duration: .01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
   }
   @media (max-width: 760px) {
-    .xr-t { font-size: 9.2vw; white-space: nowrap; } .xr-eye { font-size: 6.4vw; white-space: nowrap; }
+    .xr-t { font-size: 7.8vw; white-space: nowrap; } .xr-eye { font-size: 6.4vw; white-space: nowrap; }
     .xr { min-height: 720px; padding: 104px 16px 0; }
           .xr-pin, .xr-hair, .xr-now span, .xr-ticks span:nth-child(2), .xr-ticks span:nth-child(4) { display: none; }
     .xr-pin b { font-size: 10.5px; }
@@ -719,16 +719,17 @@
   /* phones: every move as a small logo on the curve, no labels */
   .xr-pin .ic { display: none; }
   @media (max-width: 760px) {
-    .xr .xr-pin, .xr .xr-pin.sm-hide { display: block; }
+    .xr .xr-pin, .xr .xr-pin.sm-only { display: block; }
     .xr-pin > span { display: none; }
     .xr-pin > i { width: 8px; height: 8px; left: -4px; top: -4px; box-shadow: 0 0 0 2px #101010; }
     .xr-pin .ic { display: grid; place-items: center; position: absolute; left: -11px; bottom: calc(10px + var(--lv) * 28px); width: 22px; height: 22px; border-radius: 7px; background: #fff; box-shadow: 0 0 0 1px #E4E1DA, 0 4px 10px -4px rgba(16,16,16,.3); opacity: 0; animation: xrfade .35s ease calc(var(--d) + .2s) forwards; }
     .xr-pin .ic::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: calc(var(--lv) * 28px + 6px); background: rgba(16,16,16,.35); }
     .xr-pin .ic img { width: 14px; height: 14px; object-fit: contain; }
-    .xr-pin .ic.usd b { font: 700 12px var(--ui); color: #fff; }
-    .xr-pin .ic.usd { background: #101010; box-shadow: none; }
     .xr-pin.key .ic { box-shadow: 0 0 0 2px #118453, 0 4px 10px -4px rgba(16,16,16,.3); }
   }
+  .xr-pin.sm-only { display: none; }
+  .xr-pin.flip > span { left: auto; right: 0; padding: 0 9px 0 0; flex-direction: row-reverse; box-shadow: inset -1.5px 0 0 rgba(16,16,16,.55); }
+  .xr-pin.key b { background: #118453; }
 </style>
 <script src="/captcha.js" defer></script>
 </head>
@@ -748,12 +749,12 @@
     <path class="xr-fill" clip-path="url(#xrClip)" d="M-20.0,959.8 C-11.7,959.8 3.5,960.4 30.0,959.8 C56.5,959.2 102.8,959.1 139.2,956.3 C175.6,953.5 212.0,954.3 248.4,943.0 C284.8,931.8 321.2,903.7 357.6,888.8 C394.0,874.0 430.4,864.6 466.8,854.1 C503.2,843.6 539.6,848.0 576.0,825.7 C612.4,803.4 642.7,759.0 685.2,720.3 C727.7,681.6 788.3,599.3 830.8,593.6 C873.3,588.0 921.8,670.9 940.0,686.4 L940.0,1000 L-20,1000 Z"/>
     <path class="xr-line" id="xrLine" clip-path="url(#xrClip)" d="M-20.0,959.8 C-11.7,959.8 3.5,960.4 30.0,959.8 C56.5,959.2 102.8,959.1 139.2,956.3 C175.6,953.5 212.0,954.3 248.4,943.0 C284.8,931.8 321.2,903.7 357.6,888.8 C394.0,874.0 430.4,864.6 466.8,854.1 C503.2,843.6 539.6,848.0 576.0,825.7 C612.4,803.4 642.7,759.0 685.2,720.3 C727.7,681.6 788.3,599.3 830.8,593.6 C873.3,588.0 921.8,670.9 940.0,686.4"/>
   </svg>
-  <div class="xr-pins" aria-hidden="true"><div class="xr-pin " data-m="3" style="--h:56px;z-index:944"><div class="ic img" style="--lv:0"><img src="media/growth-rea/brands/supabase.svg" alt=""></div><i></i><span><b>Supabase integration</b><em>Dec 24</em></span></div><div class="xr-pin " data-m="4" style="--h:120px;z-index:880"><div class="ic img" style="--lv:1"><img src="logos/x-mono.svg" alt=""></div><i></i><span><img src="logos/x-mono.svg" alt=""><b>X Ads switched on</b><em>Jan 25</em></span></div><div class="xr-pin key" data-m="5" style="--h:184px;z-index:816"><div class="ic img" style="--lv:2"><img src="media/growth-rea/brands/lovable.svg" alt=""></div><i></i><span><b>A badge on every app built</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="5.4" style="--h:88px;z-index:912"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$15M round · “0 → $17M ARR”</b><em>Feb 25</em></span></div><div class="xr-pin sm-hide" data-m="6" style="--h:152px;z-index:848"><div class="ic img" style="--lv:1"><img src="media/aeo/logos/reddit.png" alt=""></div><i></i><span><img src="media/aeo/logos/reddit.png" alt=""><b>Reddit Ads</b><em>Mar 25</em></span></div><div class="xr-pin sm-hide" data-m="7" style="--h:216px;z-index:784"><div class="ic img" style="--lv:2"><img src="logos/tiktok.svg" alt=""></div><i></i><span><img src="logos/tiktok.svg" alt=""><b>TikTok pixel</b><em>Apr 25</em></span></div><div class="xr-pin sm-hide" data-m="10" style="--h:70px;z-index:930"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$200M Series A</b><em>Jul 25</em></span></div><div class="xr-pin sm-hide" data-m="15" style="--h:96px;z-index:904"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$330M at $6.6B</b><em>Dec 25</em></span></div><div class="xr-pin " data-m="21" style="--h:110px;z-index:890"><div class="ic usd" style="--lv:0"><b>$</b></div><i></i><span><b>$500M run rate, reported</b><em>Jun 26</em></span></div><div class="xr-now" data-m="25"><i></i><span>194K visits / mo</span></div></div>
+  <div class="xr-pins" aria-hidden="true"><div class="xr-pin ads" data-m="3.29" style="--h:56px;z-index:944"><div class="ic" style="--lv:0"><img src="logos/google-ads.svg" alt=""></div><i></i><span><img src="logos/google-ads.svg" alt=""><b>Google Ads switched on</b></span></div><div class="xr-pin seo sm-only" data-m="3.9" style="--h:0px;z-index:1000"><div class="ic" style="--lv:1"><img src="media/growth-rea/link.svg" alt=""></div><i></i><span><img src="media/growth-rea/link.svg" alt=""><b>Affiliates link in</b></span></div><div class="xr-pin ads sm-only" data-m="4.94" style="--h:0px;z-index:1000"><div class="ic" style="--lv:2"><img src="logos/x-mono.svg" alt=""></div><i></i><span><img src="logos/x-mono.svg" alt=""><b>X Ads</b></span></div><div class="xr-pin seo key" data-m="5.26" style="--h:96px;z-index:904"><div class="ic" style="--lv:0"><img src="media/growth-rea/link.svg" alt=""></div><i></i><span><img src="media/growth-rea/link.svg" alt=""><b>A badge on every app links back</b></span></div><div class="xr-pin soc" data-m="5.77" style="--h:136px;z-index:864"><div class="ic" style="--lv:1"><img src="logos/x-mono.svg" alt=""></div><i></i><span><img src="logos/x-mono.svg" alt=""><b>“0 to $17M ARR in 3 months”</b></span></div><div class="xr-pin ads sm-only" data-m="6.06" style="--h:0px;z-index:1000"><div class="ic" style="--lv:3"><img src="media/aeo/logos/reddit.png" alt=""></div><i></i><span><img src="media/aeo/logos/reddit.png" alt=""><b>Reddit Ads</b></span></div><div class="xr-pin soc" data-m="6.32" style="--h:176px;z-index:824"><div class="ic" style="--lv:4"><img src="logos/x-mono.svg" alt=""></div><i></i><span><img src="logos/x-mono.svg" alt=""><b>“1,500 customers a day”</b></span></div><div class="xr-pin ads" data-m="7.29" style="--h:216px;z-index:784"><div class="ic" style="--lv:0"><img src="logos/tiktok.svg" alt=""></div><i></i><span><img src="logos/tiktok.svg" alt=""><b>TikTok ads</b></span></div><div class="xr-pin soc sm-only" data-m="8.97" style="--h:0px;z-index:1000"><div class="ic" style="--lv:1"><img src="logos/x-mono.svg" alt=""></div><i></i><span><img src="logos/x-mono.svg" alt=""><b>“$60M ARR”</b></span></div><div class="xr-pin ads" data-m="11.29" style="--h:56px;z-index:944"><div class="ic" style="--lv:0"><img src="logos/linkedin.svg" alt=""></div><i></i><span><img src="logos/linkedin.svg" alt=""><b>LinkedIn ads</b></span></div><div class="xr-pin soc" data-m="13.45" style="--h:96px;z-index:904"><div class="ic" style="--lv:0"><img src="logos/youtube.svg" alt=""></div><i></i><span><img src="logos/youtube.svg" alt=""><b>YouTube: “I cloned 3 apps” · 1.1M views</b></span></div><div class="xr-pin soc" data-m="16.81" style="--h:56px;z-index:944"><div class="ic" style="--lv:0"><img src="logos/x-mono.svg" alt=""></div><i></i><span><img src="logos/x-mono.svg" alt=""><b>A user’s app makes $100k/mo</b></span></div><div class="xr-pin soc sm-only" data-m="20.9" style="--h:0px;z-index:1000"><div class="ic" style="--lv:0"><img src="media/aeo/logos/reddit.png" alt=""></div><i></i><span><img src="media/aeo/logos/reddit.png" alt=""><b>Reddit thread · 142 comments</b></span></div><div class="xr-pin ads flip" data-m="24.23" style="--h:56px;z-index:944"><div class="ic" style="--lv:0"><img src="logos/meta-ads.svg" alt=""></div><i></i><span><img src="logos/meta-ads.svg" alt=""><b>Portuguese Meta ads</b></span></div><div class="xr-pin seo flip" data-m="25.16" style="--h:96px;z-index:904"><div class="ic" style="--lv:1"><img src="media/aeo/logos/chatgpt.svg" alt=""></div><i></i><span><img src="media/aeo/logos/chatgpt.svg" alt=""><b>ChatGPT names them first</b></span></div><div class="xr-now" data-m="25"><i></i><span>194K visits / mo</span></div></div>
   <div class="xr-ticks" aria-hidden="true"><span style="left:3.00%">Sep 24</span><span style="left:17.56%">Jan 25</span><span style="left:35.76%">Jun 25</span><span style="left:61.24%">Jan 26</span><span style="left:94.00%">Oct 26</span></div>
   <div class="xr-hair" id="xrHair" aria-hidden="true"><i></i><span id="xrRead"></span></div>
   <div class="xr-in">
     <p class="xr-eye"><span>/REA-growth with</span><span class="ag"><img src="media/people-search/claude-code.png" alt="Claude Code" title="Claude Code"><img src="media/growth-rea/codex.svg" alt="Codex" title="Codex"><img src="media/people-search/hermes.png" alt="Hermes" title="Hermes"></span></p>
-    <h1 class="xr-t"><span class="w"><span>how <span class="xr-rot" id="xrRot"><span class="xr-b on"><img src="media/growth-rea/brands/lovable.svg" alt="">Lovable</span><span class="xr-b"><img src="logos/tinyfish.svg" alt="">TinyFish</span><span class="xr-b"><img src="media/growth-rea/brands/typesafe.png" alt="" class="tile">TypeSafe</span><span class="xr-b"><img src="logos/treg.svg" alt="">treg</span></span> grows</span></span></h1>
+    <h1 class="xr-t"><span class="w"><span>Copy how <span class="xr-rot" id="xrRot"><span class="xr-b on"><img src="media/growth-rea/brands/lovable.svg" alt="">Lovable</span><span class="xr-b"><img src="logos/tinyfish.svg" alt="">TinyFish</span><span class="xr-b"><img src="media/growth-rea/brands/typesafe.png" alt="" class="tile">TypeSafe</span><span class="xr-b"><img src="logos/treg.svg" alt="">treg</span></span> grows</span></span></h1>
     <div class="xr-cta"><a class="xr-btn" href="/app?ref=rea-growth" id="ctaHero">Set up treg <span>→</span></a><a class="xr-link" href="#run">Watch it run ↓</a></div>
   </div>
 </header>
@@ -1008,12 +1009,39 @@
       DATA.forEach(function (d) { if (Math.abs(xOf(d[0]) - fx) < Math.abs(xOf(best[0]) - fx)) best = d; });
       var x = xOf(best[0]), y = yAt(x) / 1000 * r.height, mi = best[0] % 12, yr = 2024 + Math.floor((8 + best[0]) / 12);
       hair.style.transform = 'translateX(' + (x / 1000 * r.width) + 'px)';
-      dot.style.top = y + 'px'; read.style.top = (y - 44) + 'px';
+      hair.style.top = y + 'px'; dot.style.top = '0px'; read.style.top = '-44px';
       read.style.left = x > 800 ? 'auto' : '12px'; read.style.right = x > 800 ? '12px' : 'auto';
       read.innerHTML = MON[mi] + ' ' + yr + ' · <b>' + best[1].toLocaleString('en-US') + '</b> visits';
       hair.classList.add('on');
     });
     hero.addEventListener('mouseleave', function () { hair.classList.remove('on'); });
+  })();
+
+  /* hero pins: each takes the lowest free height where it touches no other pin, the buttons or the title; a pin with no room hides */
+  (function () {
+    var hero = $('top'), mq = matchMedia('(max-width: 760px)');
+    function hit(a, b, pad) { return a.left < b.right + pad && b.left < a.right + pad && a.top < b.bottom + pad && b.top < a.bottom + pad; }
+    function lay() {
+      var phone = mq.matches, LV = phone ? [0, 1, 2, 3, 4, 5] : [44, 80, 116, 152, 188, 224, 260, 296];
+      var pins = [].slice.call(hero.querySelectorAll('.xr-pin')).filter(function (p) { return phone || !p.classList.contains('sm-only'); });
+      var keep = [hero.querySelector('.xr-cta').getBoundingClientRect(), hero.querySelector('.xr-t').getBoundingClientRect(), hero.querySelector('.xr-eye').getBoundingClientRect()];
+      var now = hero.querySelector('.xr-now span'); if (now && !phone) keep.push(now.getBoundingClientRect());
+      pins.sort(function (a, b) { return (b.classList.contains('key') - a.classList.contains('key')) || (+a.dataset.m - +b.dataset.m); });
+      pins.forEach(function (p) {
+        p.style.visibility = '';
+        // boxes from final geometry: the labels are still growing in while this runs
+        var o = p.getBoundingClientRect(), sp = p.querySelector('span'), w = sp.offsetWidth, flip = p.classList.contains('flip'), ok = false;
+        for (var i = 0; i < LV.length && !ok; i++) {
+          var r;
+          if (phone) { p.querySelector('.ic').style.setProperty('--lv', LV[i]); var t = o.top - 10 - LV[i] * 28 - 22; r = { left: o.left - 11, right: o.left + 11, top: t, bottom: t + 22 }; }
+          else { p.style.setProperty('--h', LV[i] + 'px'); var l = flip ? o.left - w : o.left, tt = o.top - LV[i] - 10; r = { left: l, right: l + w, top: tt, bottom: tt + 26 }; }
+          ok = r.left >= 4 && r.right <= innerWidth - 4 && keep.every(function (k) { return !hit(r, k, phone ? 3 : 6); });
+          if (ok) keep.push(r);
+        }
+        if (!ok) p.style.visibility = 'hidden';
+      });
+    }
+    lay(); addEventListener('resize', lay); addEventListener('load', lay); if (document.fonts) document.fonts.ready.then(lay);
   })();
   /* hero demo: the Lovable run, replayed. Calls and costs are the run's own (rea-growth.md, method notes) */
   (function () {
